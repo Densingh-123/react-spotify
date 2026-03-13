@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoChevronDown, IoEllipsisHorizontal, IoPlaySkipBack, IoPlaySkipForward, IoPlay, IoPause, IoShuffle, IoRepeat, IoHeart, IoHeartOutline, IoClose } from 'react-icons/io5';
+import { IoChevronDown, IoEllipsisHorizontal, IoPlaySkipBack, IoPlaySkipForward, IoPlay, IoPause, IoShuffle, IoRepeat, IoHeart, IoHeartOutline, IoClose, IoAddCircle, IoDownload, IoList, IoShareSocial, IoMusicalNotes } from 'react-icons/io5';
 import { usePlayer } from '@/context/PlayerContext';
 import { useLikes } from '@/hooks/useLikes';
 import { getLyrics, LyricLine, SongItem } from '@/services/api';
@@ -65,7 +65,7 @@ export default function PlayerPage() {
   if (!currentTrack) {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-        <div style={{ fontSize: 64 }}>🎵</div>
+        <IoMusicalNotes size={64} color={colors.primary} />
         <p style={{ color: colors.textSecondary, fontSize: 18 }}>No song playing</p>
         <button className="btn-primary" onClick={() => navigate('/')} style={{ background: colors.primary }}>Browse Music</button>
       </div>
@@ -73,10 +73,11 @@ export default function PlayerPage() {
   }
 
   const menuOptions = [
-    { icon: '💖', label: liked ? 'Unlike Song' : 'Like Song', action: () => { if (currentTrack) toggleLike(currentTrack as SongItem); setShowMenu(false); } },
-    { icon: '⬇️', label: 'Download Song', action: () => { if (currentTrack?.streamUrl) window.open(currentTrack.streamUrl, '_blank'); setShowMenu(false); } },
-    { icon: '📋', label: 'View Queue', action: () => setShowMenu(false) },
-    { icon: '🔗', label: 'Share Song', action: () => { navigator.share?.({ title: currentTrack.title, text: `${currentTrack.title} by ${currentTrack.artist}` }); setShowMenu(false); } },
+    { icon: <IoHeart size={20} color={liked ? '#e91e63' : colors.primary} />, label: liked ? 'Unlike Song' : 'Like Song', action: () => { if (currentTrack) toggleLike(currentTrack as SongItem); setShowMenu(false); } },
+    { icon: <IoAddCircle size={20} color={colors.primary} />, label: 'Add to Playlist', action: () => { setShowMenu(false); } },
+    { icon: <IoDownload size={20} color={colors.primary} />, label: 'Download Song', action: () => { if (currentTrack?.streamUrl) window.open(currentTrack.streamUrl, '_blank'); setShowMenu(false); } },
+    { icon: <IoList size={20} color={colors.primary} />, label: 'View Queue', action: () => setShowMenu(false) },
+    { icon: <IoShareSocial size={20} color={colors.primary} />, label: 'Share Song', action: () => { navigator.share?.({ title: currentTrack.title, text: `${currentTrack.title} by ${currentTrack.artist}` }); setShowMenu(false); } },
   ];
 
   return (
@@ -203,7 +204,7 @@ export default function PlayerPage() {
                 display: 'flex', alignItems: 'center', gap: 16, width: '100%', padding: '14px 20px',
                 background: 'none', border: 'none', color: colors.text, fontSize: 16, fontWeight: 500, cursor: 'pointer',
               }}>
-                <span style={{ fontSize: 20 }}>{opt.icon}</span>{opt.label}
+                {opt.icon}{opt.label}
               </button>
             ))}
           </div>

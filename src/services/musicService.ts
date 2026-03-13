@@ -176,6 +176,15 @@ class MusicPlayerServiceClass {
       console.warn('Failed to track recently played:', e);
     }
   }
+  reset() {
+    this.audio.pause();
+    this.audio.src = '';
+    this._queue = [];
+    this._currentIndex = 0;
+    this._position = 0;
+    this._state = 'idle';
+    this.notify();
+  }
 }
 
 const MusicPlayerService = new MusicPlayerServiceClass();

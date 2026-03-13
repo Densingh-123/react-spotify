@@ -44,7 +44,7 @@ function AppLayout() {
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🎵</div>
         <div className="spinner" style={{ width: 36, height: 36, margin: '0 auto' }} />
-        <p style={{ color: 'var(--color-text-secondary)', marginTop: 16 }}>Loading BloomeeTunes...</p>
+        <p style={{ color: 'var(--color-text-secondary)', marginTop: 16 }}>Loading Melodify...</p>
       </div>
     </div>
   );

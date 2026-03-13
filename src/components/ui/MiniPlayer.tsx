@@ -4,7 +4,7 @@ import { IoPlay, IoPause, IoPlaySkipForward, IoClose } from 'react-icons/io5';
 import { usePlayer } from '@/context/PlayerContext';
 
 export default function MiniPlayer() {
-  const { currentTrack, isPlaying, position, duration, togglePlay, skipNext } = usePlayer();
+  const { currentTrack, isPlaying, position, duration, togglePlay, skipNext, reset } = usePlayer();
   const navigate = useNavigate();
 
   if (!currentTrack) return null;
@@ -24,16 +24,19 @@ export default function MiniPlayer() {
         <div className="mini-player-info" onClick={() => navigate('/player')} style={{ cursor: 'pointer' }}>
           <div className="mini-player-title">{currentTrack.title}</div>
           <div className="mini-player-artist">{currentTrack.artist}</div>
-          <div className="mini-player-progress" style={{ marginTop: 4 }}>
+          <div className="mini-player-progress">
             <div className="mini-player-progress-fill" style={{ width: `${progress}%` }} />
           </div>
         </div>
         <div className="mini-player-controls">
-          <button className="mini-player-play" onClick={() => togglePlay()}>
+          <button className="mini-player-play" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
             {isPlaying ? <IoPause size={18} color="#fff" /> : <IoPlay size={18} color="#fff" style={{ marginLeft: 2 }} />}
           </button>
-          <button className="icon-btn" onClick={() => skipNext()} style={{ color: 'var(--color-text-secondary)' }}>
+          <button className="icon-btn" onClick={(e) => { e.stopPropagation(); skipNext(); }} style={{ color: 'var(--color-text-secondary)', width: 32, height: 32 }}>
             <IoPlaySkipForward size={20} />
+          </button>
+          <button className="icon-btn" onClick={(e) => { e.stopPropagation(); reset(); }} style={{ color: 'var(--color-text-secondary)', width: 32, height: 32 }}>
+            <IoClose size={20} />
           </button>
         </div>
       </div>

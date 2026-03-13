@@ -42,7 +42,7 @@ export default function SettingsPage() {
       items: [
         { icon: IoHelpCircle, label: 'Support Chat', sub: 'AI-powered help', action: () => nav('/support') },
         { icon: IoLockClosed, label: 'Privacy Policy', sub: 'How we protect your data', action: () => {} },
-        { icon: IoInformationCircle, label: 'About BloomeeTunes', sub: 'Version 1.0.0', action: () => {} },
+        { icon: IoInformationCircle, label: 'About Melodify', sub: 'Version 1.0.0', action: () => {} },
       ]
     },
   ];
@@ -123,7 +123,7 @@ export default function SettingsPage() {
           </div>
         ))}
         <p style={{ textAlign: 'center', fontSize: 13, color: colors.textSecondary, paddingTop: 8 }}>
-          BloomeeTunes v1.0.0 — Made with ❤️
+          Melodify v1.0.0 — Made with ❤️
         </p>
       </div>
     </div>

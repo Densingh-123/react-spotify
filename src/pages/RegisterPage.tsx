@@ -44,7 +44,7 @@ export default function RegisterPage() {
             <IoPersonAdd size={38} color="#fff" />
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: colors.text, marginBottom: 6 }}>Create Account</h1>
-          <p style={{ fontSize: 14, color: colors.textSecondary }}>Join BloomeeTunes and explore a world of music</p>
+          <p style={{ fontSize: 14, color: colors.textSecondary }}>Join Melodify and explore a world of music</p>
         </div>
 
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

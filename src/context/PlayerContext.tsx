@@ -17,6 +17,7 @@ interface PlayerContextType {
   skipNext: () => Promise<void>;
   skipPrev: () => Promise<void>;
   setRepeat: (mode: 'off' | 'track' | 'queue') => void;
+  reset: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -48,6 +49,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       skipNext: () => MusicPlayerService.skipNext(),
       skipPrev: () => MusicPlayerService.skipPrev(),
       setRepeat: (m) => MusicPlayerService.setRepeat(m),
+      reset: () => MusicPlayerService.reset(),
     }}>
       {children}
     </PlayerContext.Provider>

@@ -16,10 +16,10 @@ const KB: Record<string, string> = {
   repeat: "In the Player, tap the repeat button to cycle: Off → Repeat One → Repeat All.",
   login: "Tap the Login button or go to Settings. Use email/password or Google to sign in.",
   register: "Go to Login → Register. Enter your name, email, and password to create an account.",
-  recently: "BloomeeTunes remembers what you listen to. View your history in Settings → Recently Played.",
+  recently: "Melodify remembers what you listen to. View your history in Settings → Recently Played.",
   help: "I can help with: playing music, searching, playlists, likes, themes, downloads, lyrics, login, and more!",
-  hello: "Hi there! 👋 I'm BloomeeTunes AI. How can I help you today?",
-  hi: "Hello! I'm the BloomeeTunes support assistant. Ask me anything about the app!",
+  hello: "Hi there! 👋 I'm Melodify AI. How can I help you today?",
+  hi: "Hello! I'm the Melodify support assistant. Ask me anything about the app!",
 };
 
 const getResponse = (input: string): string => {
@@ -27,14 +27,14 @@ const getResponse = (input: string): string => {
   for (const [key, answer] of Object.entries(KB)) {
     if (text.includes(key)) return answer;
   }
-  return "I'm here to help with BloomeeTunes! Try asking about playing music, playlists, themes, lyrics, or login.";
+  return "I'm here to help with Melodify! Try asking about playing music, playlists, themes, lyrics, or login.";
 };
 
 export default function SupportChatPage() {
   const { colors } = useTheme();
   const nav = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
-    { id: '0', text: "Hi! I'm the BloomeeTunes AI assistant 🎵 Ask me anything about the app!", isUser: false }
+    { id: '0', text: "Hi! I'm the Melodify AI assistant 🎵 Ask me anything about the app!", isUser: false }
   ]);
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -56,7 +56,7 @@ export default function SupportChatPage() {
         <button className="icon-btn" onClick={() => nav(-1)} style={{ color: colors.text }}><IoChevronBack size={26} /></button>
         <IoChatbubbles size={26} color={colors.primary} />
         <div>
-          <div style={{ fontWeight: 800, fontSize: 16, color: colors.text }}>BloomeeTunes AI Support</div>
+          <div style={{ fontWeight: 800, fontSize: 16, color: colors.text }}>Melodify AI Support</div>
           <div style={{ fontSize: 12, color: '#00e676' }}>● Online</div>
         </div>
       </div>

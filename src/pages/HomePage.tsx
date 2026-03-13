@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoMusicalNotes, IoNotificationsOutline, IoSettingsOutline, IoChevronForward } from 'react-icons/io5';
+import { IoMusicalNotes, IoNotificationsOutline, IoSettingsOutline, IoChevronForward, IoEllipsisHorizontal, IoLockClosed, IoFlame } from 'react-icons/io5';
 import { useTrendingMusic } from '@/hooks/useMusicData';
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
 import { useAuth } from '@/context/AuthContext';
@@ -14,12 +14,18 @@ import PlaylistPickerModal from '@/components/PlaylistPickerModal';
 import GlassCard from '@/components/ui/GlassCard';
 
 const GENRES = [
-  { label: 'Pop', color: '#FF6B6B', emoji: '🎵' }, { label: 'Chill', color: '#4ECDC4', emoji: '🌙' },
-  { label: 'Workout', color: '#45B7D1', emoji: '💪' }, { label: 'Rock', color: '#96CEB4', emoji: '🎸' },
-  { label: 'Party', color: '#FFEEAD', emoji: '🎉' }, { label: 'Melody', color: '#FFB7B2', emoji: '🎶' },
-  { label: 'Dance', color: '#E2F0CB', emoji: '💃' }, { label: 'Devotional', color: '#B5EAD7', emoji: '🙏' },
-  { label: 'Classical', color: '#C7CEEA', emoji: '🎻' }, { label: 'Jazz', color: '#D4A5A5', emoji: '🎺' },
-  { label: 'Folk', color: '#9B59B6', emoji: '🌿' }, { label: 'Hip-Hop', color: '#E67E22', emoji: '🎤' },
+  { label: 'Pop', color: '#FF6B6B', image: '/src/assets/genres/pop.png' },
+  { label: 'Chill', color: '#4ECDC4', image: '/src/assets/genres/chill.png' },
+  { label: 'Workout', color: '#45B7D1', image: '/src/assets/genres/workout.png' },
+  { label: 'Rock', color: '#96CEB4', image: '/src/assets/genres/rock.png' },
+  { label: 'Party', color: '#FFEEAD', image: '/src/assets/genres/party.png' },
+  { label: 'Melody', color: '#FFB7B2', image: '/src/assets/genres/melody.png' },
+  { label: 'Dance', color: '#E2F0CB', image: '/src/assets/genres/dance.png' },
+  { label: 'Devotional', color: '#B5EAD7', image: '/src/assets/genres/devotional.png' },
+  { label: 'Classical', color: '#C7CEEA', image: '/src/assets/genres/classical.png' },
+  { label: 'Jazz', color: '#D4A5A5', image: '/src/assets/genres/jazz.png' },
+  { label: 'Folk', color: '#9B59B6', image: '/src/assets/genres/folk.png' },
+  { label: 'Hip-Hop', color: '#E67E22', image: '/src/assets/genres/hiphop.png' },
 ];
 
 const GENRE_QUERIES: Record<string, string> = {
@@ -73,7 +79,7 @@ export default function HomePage() {
           </div>
           <div>
             <div style={{ fontSize: 12, color: colors.textSecondary, fontWeight: 600 }}>{getGreeting()} 👋</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: colors.text, letterSpacing: -0.8 }}>BloomeeTunes</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: colors.text, letterSpacing: -0.8 }}>Melodify</div>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
@@ -95,14 +101,16 @@ export default function HomePage() {
               <div key={item.id} className="hero-card" style={{ width: 280, cursor: 'pointer' }} onClick={() => handlePlay(item, featured)}>
                 <img src={item.artworkUrl} alt={item.title} className="hero-card-img" />
                 <div className="hero-card-gradient">
-                  <div style={{ display: 'inline-block', background: colors.primary, padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 900, color: '#fff', letterSpacing: 1, marginBottom: 8 }}>FEATURED</div>
+                  <div style={{ position: 'absolute', top: 12, right: 12, background: colors.primary, padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 900, color: '#fff', letterSpacing: 1 }}>FEATURED</div>
                   <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
                   <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.artist}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 38, height: 38, borderRadius: 50, background: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <IoMusicalNotes size={18} color="#fff" />
                     </div>
-                    <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: 20 }} onClick={e => { e.stopPropagation(); openOptions(item); }}>⋯</button>
+                    <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={e => { e.stopPropagation(); openOptions(item); }}>
+                      <IoEllipsisHorizontal size={20} />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -143,10 +151,12 @@ export default function HomePage() {
         <div className="section-title" style={{ color: colors.text }}>Genres & Moods</div>
         <div className="h-scroll">
           {GENRES.map(g => (
-            <div key={g.label} className="genre-card" style={{ background: g.color + 'DD' }}
+            <div key={g.label} className="genre-card"
               onClick={() => navigate(`/playlist/${g.label.toLowerCase()}?name=${encodeURIComponent(g.label)}&query=${encodeURIComponent(GENRE_QUERIES[g.label] || g.label)}`)}>
-              <span style={{ fontSize: 22 }}>{g.emoji}</span>
-              <span className="genre-label">{g.label}</span>
+              <img src={g.image} alt={g.label} className="genre-card-img" />
+              <div className="genre-card-overlay" style={{ background: `linear-gradient(to top, ${g.color}EE, transparent)` }}>
+                <span className="genre-label">{g.label}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -192,7 +202,9 @@ export default function HomePage() {
       {/* Trending Now */}
       {trendingNow.length > 0 && (
         <div className="section">
-          <div className="section-title" style={{ color: colors.text }}>Trending Now 🔥</div>
+          <div className="section-title" style={{ color: colors.text, display: 'flex', alignItems: 'center', gap: 8 }}>
+            Trending Now <IoFlame color="#ff9800" size={20} />
+          </div>
           <div className="h-scroll">
             {trendingNow.map((item, idx) => <SongCard key={item.id} item={item} onPress={() => handlePlay(item, trendingNow)} onMorePress={() => openOptions(item)} width={140} height={185} />)}
           </div>

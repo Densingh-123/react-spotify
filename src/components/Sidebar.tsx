@@ -21,7 +21,7 @@ export default function Sidebar() {
         <div className="sidebar-logo-icon">
           <IoMusicalNotes size={22} color="var(--color-primary)" />
         </div>
-        <span className="sidebar-brand" style={{ color: 'var(--color-text)' }}>BloomeeTunes</span>
+        <span className="sidebar-brand" style={{ color: 'var(--color-text)' }}>Melodify</span>
       </div>
       <nav className="sidebar-nav">
         {NAV_ITEMS.map(({ to, icon: Icon, label }) => (

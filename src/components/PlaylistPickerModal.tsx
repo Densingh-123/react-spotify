@@ -1,7 +1,7 @@
 import React from 'react';
 import { SongItem } from '@/services/api';
 import { usePlaylists } from '@/hooks/usePlaylists';
-import { IoClose } from 'react-icons/io5';
+import { IoClose, IoMusicalNote } from 'react-icons/io5';
 
 interface Props {
   visible: boolean;
@@ -48,8 +48,10 @@ export default function PlaylistPickerModal({ visible, onClose, song }: Props) {
                 width: 40, height: 40, borderRadius: 10,
                 background: p.color + '33',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 18,
-              }}>🎵</div>
+                color: p.color,
+              }}>
+                <IoMusicalNote size={22} />
+              </div>
               <div style={{ textAlign: 'left' }}>
                 <p style={{ fontWeight: 700, fontSize: 14 }}>{p.name}</p>
                 <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{p.songs?.length || 0} songs</p>
