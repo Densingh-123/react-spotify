@@ -14,18 +14,18 @@ import PlaylistPickerModal from '@/components/PlaylistPickerModal';
 import GlassCard from '@/components/ui/GlassCard';
 
 const GENRES = [
-  { label: 'Pop', color: '#FF6B6B', image: '/src/assets/genres/pop.png' },
-  { label: 'Chill', color: '#4ECDC4', image: '/src/assets/genres/chill.png' },
-  { label: 'Workout', color: '#45B7D1', image: '/src/assets/genres/workout.png' },
-  { label: 'Rock', color: '#96CEB4', image: '/src/assets/genres/rock.png' },
-  { label: 'Party', color: '#FFEEAD', image: '/src/assets/genres/party.png' },
-  { label: 'Melody', color: '#FFB7B2', image: '/src/assets/genres/melody.png' },
-  { label: 'Dance', color: '#E2F0CB', image: '/src/assets/genres/dance.png' },
-  { label: 'Devotional', color: '#B5EAD7', image: '/src/assets/genres/devotional.png' },
-  { label: 'Classical', color: '#C7CEEA', image: '/src/assets/genres/classical.png' },
-  { label: 'Jazz', color: '#D4A5A5', image: '/src/assets/genres/jazz.png' },
-  { label: 'Folk', color: '#9B59B6', image: '/src/assets/genres/folk.png' },
-  { label: 'Hip-Hop', color: '#E67E22', image: '/src/assets/genres/hiphop.png' },
+  { label: 'Pop', color: '#FF6B6B', image: '/genres/pop.png' },
+  { label: 'Chill', color: '#4ECDC4', image: '/genres/chill.png' },
+  { label: 'Workout', color: '#45B7D1', image: '/genres/workout.png' },
+  { label: 'Rock', color: '#96CEB4', image: '/genres/rock.png' },
+  { label: 'Party', color: '#FFEEAD', image: '/genres/party.png' },
+  { label: 'Melody', color: '#FFB7B2', image: '/genres/melody.png' },
+  { label: 'Dance', color: '#E2F0CB', image: '/genres/dance.png' },
+  { label: 'Devotional', color: '#B5EAD7', image: '/genres/devotional.png' },
+  { label: 'Classical', color: '#C7CEEA', image: '/genres/classical.png' },
+  { label: 'Jazz', color: '#D4A5A5', image: '/genres/jazz.png' },
+  { label: 'Folk', color: '#9B59B6', image: '/genres/folk.png' },
+  { label: 'Hip-Hop', color: '#E67E22', image: '/genres/hiphop.png' },
 ];
 
 const GENRE_QUERIES: Record<string, string> = {
