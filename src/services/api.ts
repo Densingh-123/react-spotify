@@ -137,6 +137,19 @@ export const searchMusic = async (query: string, offset = 0): Promise<SongItem[]
   }
 };
 
+export const getRecommendedSongs = async (track: SongItem): Promise<SongItem[]> => {
+  try {
+    // Basic recommendation: search for the artist or related terms
+    const query = `${track.artist} ${track.title.split('(')[0]}`;
+    const results = await searchMusic(query);
+    // Filter out the current track
+    return results.filter(s => s.id !== track.id).slice(0, 10);
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    return [];
+  }
+};
+
 export const fetchRingtones = async (): Promise<SongItem[]> => {
   try {
     const query = encodeURIComponent('instrumental ringtones');

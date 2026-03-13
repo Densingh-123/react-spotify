@@ -16,6 +16,7 @@ interface PlayerContextType {
   seekTo: (seconds: number) => void;
   skipNext: () => Promise<void>;
   skipPrev: () => Promise<void>;
+  jumpToQueueIndex: (index: number) => Promise<void>;
   setRepeat: (mode: 'off' | 'track' | 'queue') => void;
   reset: () => void;
 }
@@ -48,6 +49,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       seekTo: (s) => MusicPlayerService.seekTo(s),
       skipNext: () => MusicPlayerService.skipNext(),
       skipPrev: () => MusicPlayerService.skipPrev(),
+      jumpToQueueIndex: (i) => MusicPlayerService.jumpToQueueIndex(i),
       setRepeat: (m) => MusicPlayerService.setRepeat(m),
       reset: () => MusicPlayerService.reset(),
     }}>

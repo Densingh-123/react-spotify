@@ -9,7 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 export default function PlayerPage() {
   const { colors } = useTheme();
   const navigate = useNavigate();
-  const { currentTrack, isPlaying, position, duration, togglePlay, skipNext, skipPrev, seekTo, repeatMode, setRepeat } = usePlayer();
+  const { currentTrack, isPlaying, position, duration, togglePlay, skipNext, skipPrev, seekTo, repeatMode, setRepeat, queue, jumpToQueueIndex } = usePlayer();
   const { toggleLike, isLiked } = useLikes();
 
   const [showMenu, setShowMenu] = useState(false);
@@ -18,6 +18,7 @@ export default function PlayerPage() {
   const [seekValue, setSeekValue] = useState(0);
   const progressRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'lyrics' | 'queue'>('lyrics');
 
   const progressPercent = duration > 0 ? Math.min(1, Math.max(0, position / duration)) : 0;
   const displayPercent = isSeeking ? seekValue : progressPercent;
@@ -25,10 +26,27 @@ export default function PlayerPage() {
   const liked = currentTrack ? isLiked(currentTrack.id) : false;
 
   useEffect(() => {
-    if (!currentTrack) return;
+    if (!currentTrack) {
+      setLyrics([]);
+      return;
+    }
+
+    let active = true;
+    setLyrics([]); // Clear lyrics immediately for new track
+
     getLyrics(currentTrack.id, currentTrack.title, currentTrack.artist, currentTrack.album, duration)
-      .then(d => setLyrics(d.synced));
-  }, [currentTrack?.id, duration]);
+      .then(d => {
+        if (active) {
+          setLyrics(d.synced);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch lyrics:', err);
+        if (active) setLyrics([]);
+      });
+
+    return () => { active = false; };
+  }, [currentTrack?.id, duration > 0]);
 
   const currentLyricIdx = lyrics.findIndex((l, i) => {
     const nextTime = lyrics[i + 1]?.time || 9999;
@@ -160,34 +178,106 @@ export default function PlayerPage() {
         </button>
       </div>
 
-      {/* Lyrics */}
-      <div style={{ background: colors.surface, borderRadius: 20, padding: 16, maxHeight: 200, overflow: 'hidden' }}>
-        <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: colors.textSecondary, marginBottom: 10 }}>Lyrics</p>
-        {lyrics.length > 0 ? (
-          <div ref={lyricsRef} style={{ height: 150, overflowY: 'auto' }}>
-            {lyrics.map((line, idx) => {
-              const isActive = idx === currentLyricIdx;
-              return (
-                <div key={`${line.time}-${idx}`} style={{
-                  height: 45, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  opacity: isActive ? 1 : 0.4,
-                  transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                  transition: 'all 0.3s',
-                }}>
-                  <span style={{
-                    fontSize: isActive ? 18 : 15, fontWeight: isActive ? 800 : 400,
-                    color: isActive ? colors.primary : colors.textSecondary,
-                    textAlign: 'center',
-                    textShadow: isActive ? `0 0 20px ${colors.primary}` : 'none',
-                  }}>{line.text}</span>
-                </div>
-              );
-            })}
+      {/* Tab Switcher */}
+      <div style={{ display: 'flex', background: colors.surface, borderRadius: 16, padding: 4, marginBottom: 20 }}>
+        <button
+          onClick={() => setActiveTab('lyrics')}
+          style={{
+            flex: 1, padding: '10px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+            background: activeTab === 'lyrics' ? colors.primary : 'transparent',
+            color: activeTab === 'lyrics' ? '#fff' : colors.textSecondary,
+            transition: 'all 0.2s'
+          }}
+        >Lyrics</button>
+        <button
+          onClick={() => setActiveTab('queue')}
+          style={{
+            flex: 1, padding: '10px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+            background: activeTab === 'queue' ? colors.primary : 'transparent',
+            color: activeTab === 'queue' ? '#fff' : colors.textSecondary,
+            transition: 'all 0.2s'
+          }}
+        >Up Next</button>
+      </div>
+
+      {/* Content Area (Lyrics or Queue) */}
+      <div style={{ background: colors.surface, borderRadius: 20, padding: 16, marginBottom: 24, minHeight: 400 }}>
+        {activeTab === 'lyrics' ? (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: colors.textSecondary }}>Lyrics</p>
+            </div>
+            {lyrics.length > 0 ? (
+              <div ref={lyricsRef} style={{ height: 350, overflowY: 'auto', paddingRight: 4 }}>
+                {lyrics.map((line, idx) => {
+                  const isActive = idx === currentLyricIdx;
+                  return (
+                    <div key={`${line.time}-${idx}`} style={{
+                      height: 45, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      opacity: isActive ? 1 : 0.4,
+                      transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                      transition: 'all 0.3s',
+                    }}>
+                      <span style={{
+                        fontSize: isActive ? 18 : 15, fontWeight: isActive ? 800 : 400,
+                        color: isActive ? colors.primary : colors.textSecondary,
+                        textAlign: 'center',
+                        textShadow: isActive ? `0 0 20px ${colors.primary}` : 'none',
+                      }}>{line.text}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ height: 300, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}>
+                <span style={{ fontSize: 48 }}>🎵</span>
+                <p style={{ color: colors.textSecondary, marginTop: 12, fontSize: 14 }}>No synchronized lyrics available</p>
+              </div>
+            )}
           </div>
         ) : (
-          <div style={{ height: 100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}>
-            <span style={{ fontSize: 28 }}>🎵</span>
-            <p style={{ color: colors.textSecondary, marginTop: 8, fontSize: 13 }}>No synchronized lyrics</p>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: colors.textSecondary }}>Up Next</p>
+              <span style={{ fontSize: 11, color: colors.primary, fontWeight: 600 }}>{queue.length} Songs</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 350, overflowY: 'auto', paddingRight: 4 }}>
+              {queue.map((song, idx) => {
+                const isCurrent = currentTrack.id === song.id;
+                return (
+                  <div
+                    key={`queue-${song.id}-${idx}`}
+                    onClick={() => jumpToQueueIndex(idx)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12, padding: 8, borderRadius: 12,
+                      background: isCurrent ? `${colors.primary}15` : 'transparent',
+                      cursor: 'pointer', transition: 'background 0.2s',
+                      border: isCurrent ? `1px solid ${colors.primary}33` : '1px solid transparent'
+                    }}
+                    onMouseEnter={e => !isCurrent && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                    onMouseLeave={e => !isCurrent && (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <div style={{ width: 44, height: 44, borderRadius: 8, overflow: 'hidden', position: 'relative' }}>
+                      <img src={song.artworkUrl} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      {isCurrent && (
+                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div className="playing-bars">
+                            <div className="bar" />
+                            <div className="bar" />
+                            <div className="bar" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: isCurrent ? colors.primary : colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</div>
+                      <div style={{ fontSize: 12, color: colors.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.artist}</div>
+                    </div>
+                    {isPlaying && isCurrent && <IoMusicalNotes size={16} color={colors.primary} />}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

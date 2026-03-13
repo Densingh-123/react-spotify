@@ -1,4 +1,4 @@
-import { SongItem, getFullStreamUrl } from './api';
+import { SongItem, getFullStreamUrl, getRecommendedSongs } from './api';
 import { db, auth } from './firebaseConfig';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, limit } from 'firebase/firestore';
 
@@ -121,6 +121,17 @@ class MusicPlayerServiceClass {
     } else if (this._repeatMode === 'queue') {
       this._currentIndex = 0;
       await this.loadAndPlay(this._queue[0]);
+    } else {
+      // Autoplay: if we're at the end of the queue, fetch recommendations
+      const current = this.currentTrack;
+      if (current) {
+        const reco = await getRecommendedSongs(current);
+        if (reco.length > 0) {
+          this._queue = [...this._queue, ...reco.map(s => ({ ...s }))];
+          this._currentIndex++;
+          await this.loadAndPlay(this._queue[this._currentIndex]);
+        }
+      }
     }
   }
 
@@ -135,17 +146,24 @@ class MusicPlayerServiceClass {
     }
   }
 
+  async jumpToQueueIndex(index: number) {
+    if (index >= 0 && index < this._queue.length) {
+      this._currentIndex = index;
+      await this.loadAndPlay(this._queue[this._currentIndex]);
+    }
+  }
+
   setRepeat(mode: 'off' | 'track' | 'queue') {
     this._repeatMode = mode;
     this.notify();
   }
 
-  private handleEnded() {
+  private async handleEnded() {
     if (this._repeatMode === 'track') {
       this.audio.currentTime = 0;
-      this.audio.play();
+      await this.audio.play();
     } else {
-      this.skipNext();
+      await this.skipNext();
     }
   }
 
