@@ -1,0 +1,206 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { IoMusicalNotes, IoNotificationsOutline, IoSettingsOutline, IoChevronForward } from 'react-icons/io5';
+import { useTrendingMusic } from '@/hooks/useMusicData';
+import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
+import { useAuth } from '@/context/AuthContext';
+import { usePlayer } from '@/context/PlayerContext';
+import { SongItem } from '@/services/api';
+import { useTheme } from '@/context/ThemeContext';
+import SongCard from '@/components/ui/SongCard';
+import SkeletonLoader from '@/components/ui/SkeletonLoader';
+import SongOptionsMenu from '@/components/SongOptionsMenu';
+import PlaylistPickerModal from '@/components/PlaylistPickerModal';
+import GlassCard from '@/components/ui/GlassCard';
+
+const GENRES = [
+  { label: 'Pop', color: '#FF6B6B', emoji: '🎵' }, { label: 'Chill', color: '#4ECDC4', emoji: '🌙' },
+  { label: 'Workout', color: '#45B7D1', emoji: '💪' }, { label: 'Rock', color: '#96CEB4', emoji: '🎸' },
+  { label: 'Party', color: '#FFEEAD', emoji: '🎉' }, { label: 'Melody', color: '#FFB7B2', emoji: '🎶' },
+  { label: 'Dance', color: '#E2F0CB', emoji: '💃' }, { label: 'Devotional', color: '#B5EAD7', emoji: '🙏' },
+  { label: 'Classical', color: '#C7CEEA', emoji: '🎻' }, { label: 'Jazz', color: '#D4A5A5', emoji: '🎺' },
+  { label: 'Folk', color: '#9B59B6', emoji: '🌿' }, { label: 'Hip-Hop', color: '#E67E22', emoji: '🎤' },
+];
+
+const GENRE_QUERIES: Record<string, string> = {
+  Pop: 'pop hits 2024', Chill: 'lofi chill beats', Workout: 'workout motivation',
+  Rock: 'classic rock anthems', Party: 'party dance hits', Jazz: 'smooth jazz collection',
+  Melody: 'tamil melody songs', Dance: 'folk dance songs', Devotional: 'devotional tracks',
+  Classical: 'indian classical music', Folk: 'village folk music', 'Hip-Hop': 'hip hop beats 2024',
+};
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+export default function HomePage() {
+  const { colors } = useTheme();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { playTrack } = usePlayer();
+  const { data: trending, isLoading, refetch } = useTrendingMusic();
+  const { recentlyPlayed } = useRecentlyPlayed(12);
+  const [selectedSong, setSelectedSong] = useState<SongItem | null>(null);
+  const [optionsVisible, setOptionsVisible] = useState(false);
+  const [pickerVisible, setPickerVisible] = useState(false);
+
+  const featured = trending?.slice(0, 3) || [];
+  const topCharts = trending?.slice(3, 11) || [];
+  const topAlbums = trending?.slice(11, 20) || [];
+  const topArtists = trending?.slice(20, 28) || [];
+  const trendingNow = trending?.slice(28) || [];
+
+  const handlePlay = async (track: SongItem, list: SongItem[]) => {
+    if (!user) { navigate('/login'); return; }
+    const idx = list.findIndex(s => s.id === track.id);
+    await playTrack(track, list, idx);
+    navigate('/player');
+  };
+
+  const openOptions = (song: SongItem) => { setSelectedSong(song); setOptionsVisible(true); };
+  const openPicker = () => { setOptionsVisible(false); setPickerVisible(true); };
+
+  return (
+    <div style={{ padding: '0 16px 16px', overflowY: 'auto', height: '100%' }}>
+      {/* Mobile Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 16, background: colors.primary + '22', border: `1px solid ${colors.primary}44`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <IoMusicalNotes size={26} color={colors.primary} />
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: colors.textSecondary, fontWeight: 600 }}>{getGreeting()} 👋</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: colors.text, letterSpacing: -0.8 }}>BloomeeTunes</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button className="icon-btn" onClick={() => navigate('/settings')} style={{ background: 'rgba(255,255,255,0.07)', color: colors.text }}>
+            <IoNotificationsOutline size={20} />
+          </button>
+          <button className="icon-btn" onClick={() => navigate('/settings')} style={{ background: 'rgba(255,255,255,0.07)', color: colors.text }}>
+            <IoSettingsOutline size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* Featured Today */}
+      <div className="section">
+        <div className="section-title" style={{ color: colors.text }}>Featured Today</div>
+        <div className="h-scroll" style={{ gap: 14 }}>
+          {isLoading ? [0, 1, 2].map(i => <SkeletonLoader key={i} width={280} height={220} style={{ marginRight: 0, borderRadius: 22, flexShrink: 0 }} />) :
+            featured.map(item => (
+              <div key={item.id} className="hero-card" style={{ width: 280, cursor: 'pointer' }} onClick={() => handlePlay(item, featured)}>
+                <img src={item.artworkUrl} alt={item.title} className="hero-card-img" />
+                <div className="hero-card-gradient">
+                  <div style={{ display: 'inline-block', background: colors.primary, padding: '3px 8px', borderRadius: 6, fontSize: 10, fontWeight: 900, color: '#fff', letterSpacing: 1, marginBottom: 8 }}>FEATURED</div>
+                  <div style={{ fontSize: 19, fontWeight: 800, color: '#fff', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.artist}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 50, background: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <IoMusicalNotes size={18} color="#fff" />
+                    </div>
+                    <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: 20 }} onClick={e => { e.stopPropagation(); openOptions(item); }}>⋯</button>
+                  </div>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      {/* Recently Played */}
+      {recentlyPlayed.length > 0 && (
+        <div className="section">
+          <div className="section-header-row">
+            <div className="section-title" style={{ color: colors.text, marginBottom: 0 }}>Recently Played</div>
+            <button className="see-all-btn" onClick={() => navigate('/recently-played')}>
+              See All <IoChevronForward size={14} />
+            </button>
+          </div>
+          <div className="h-scroll">
+            {recentlyPlayed.map((item, idx) => (
+              <SongCard key={`rp-${item.id}-${idx}`} item={item} onPress={() => handlePlay(item, recentlyPlayed)} onMorePress={() => openOptions(item)} width={140} height={185} />
+            ))}
+          </div>
+        </div>
+      )}
+      {!user && (
+        <div className="section">
+          <div className="section-title" style={{ color: colors.text }}>Recently Played</div>
+          <GlassCard style={{ padding: 24, borderRadius: 16, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
+            <p style={{ color: colors.textSecondary, fontSize: 14, marginBottom: 16 }}>Login to see your recently played songs</p>
+            <button className="btn-primary" onClick={() => navigate('/login')} style={{ background: colors.primary }}>Login</button>
+          </GlassCard>
+        </div>
+      )}
+
+      {/* Genres */}
+      <div className="section">
+        <div className="section-title" style={{ color: colors.text }}>Genres & Moods</div>
+        <div className="h-scroll">
+          {GENRES.map(g => (
+            <div key={g.label} className="genre-card" style={{ background: g.color + 'DD' }}
+              onClick={() => navigate(`/playlist/${g.label.toLowerCase()}?name=${encodeURIComponent(g.label)}&query=${encodeURIComponent(GENRE_QUERIES[g.label] || g.label)}`)}>
+              <span style={{ fontSize: 22 }}>{g.emoji}</span>
+              <span className="genre-label">{g.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Top Charts */}
+      <div className="section">
+        <div className="section-header-row">
+          <div className="section-title" style={{ color: colors.text, marginBottom: 0 }}>Top Charts</div>
+          <button className="see-all-btn" onClick={() => navigate('/search')}>See All <IoChevronForward size={14} /></button>
+        </div>
+        <div className="h-scroll">
+          {isLoading ? Array(4).fill(0).map((_, i) => <SkeletonLoader key={i} width={160} height={210} style={{ borderRadius: 16, flexShrink: 0 }} />) :
+            topCharts.map((item, idx) => <SongCard key={item.id} item={item} onPress={() => handlePlay(item, topCharts)} onMorePress={() => openOptions(item)} width={160} height={210} />)}
+        </div>
+      </div>
+
+      {/* Top Albums */}
+      <div className="section">
+        <div className="section-title" style={{ color: colors.text }}>Top Albums</div>
+        <div className="h-scroll">
+          {isLoading ? Array(4).fill(0).map((_, i) => <SkeletonLoader key={i} width={160} height={210} style={{ borderRadius: 16, flexShrink: 0 }} />) :
+            topAlbums.map((item, idx) => <SongCard key={item.id} item={item} onPress={() => handlePlay(item, topAlbums)} onMorePress={() => openOptions(item)} width={160} height={210} />)}
+        </div>
+      </div>
+
+      {/* Top Artists */}
+      <div className="section">
+        <div className="section-title" style={{ color: colors.text }}>Top Artists</div>
+        <div className="h-scroll">
+          {isLoading ? Array(4).fill(0).map((_, i) => <SkeletonLoader key={i} width={80} height={80} style={{ borderRadius: 40, flexShrink: 0 }} />) :
+            topArtists.map((item, idx) => (
+              <div key={item.id} style={{ textAlign: 'center', width: 100, flexShrink: 0, cursor: 'pointer' }} onClick={() => handlePlay(item, topArtists)}>
+                <div style={{ width: 80, height: 80, borderRadius: 40, overflow: 'hidden', margin: '0 auto 8px' }}>
+                  <img src={item.artworkUrl} alt={item.artist} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.artist || item.title}</div>
+              </div>
+            ))}
+        </div>
+      </div>
+
+      {/* Trending Now */}
+      {trendingNow.length > 0 && (
+        <div className="section">
+          <div className="section-title" style={{ color: colors.text }}>Trending Now 🔥</div>
+          <div className="h-scroll">
+            {trendingNow.map((item, idx) => <SongCard key={item.id} item={item} onPress={() => handlePlay(item, trendingNow)} onMorePress={() => openOptions(item)} width={140} height={185} />)}
+          </div>
+        </div>
+      )}
+
+      <SongOptionsMenu visible={optionsVisible} onClose={() => setOptionsVisible(false)} song={selectedSong} onAddToPlaylist={openPicker} />
+      <PlaylistPickerModal visible={pickerVisible} onClose={() => setPickerVisible(false)} song={selectedSong} />
+    </div>
+  );
+}

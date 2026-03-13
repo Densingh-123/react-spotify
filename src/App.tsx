@@ -1,0 +1,102 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { PlayerProvider } from './context/PlayerContext';
+import Sidebar from './components/Sidebar';
+import BottomNav from './components/BottomNav';
+import MiniPlayer from './components/ui/MiniPlayer';
+
+// Pages
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import HomePage from './pages/HomePage';
+import SearchPage from './pages/SearchPage';
+import LibraryPage from './pages/LibraryPage';
+import PlayerPage from './pages/PlayerPage';
+import SettingsPage from './pages/SettingsPage';
+import ThemesPage from './pages/ThemesPage';
+import SupportChatPage from './pages/SupportChatPage';
+import PlaylistDetailPage from './pages/PlaylistDetailPage';
+import LikedSongsPage from './pages/LikedSongsPage';
+import RecentlyPlayedPage from './pages/RecentlyPlayedPage';
+import DownloadsPage from './pages/DownloadsPage';
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } }
+});
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return (
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="spinner" style={{ width: 36, height: 36 }} />
+    </div>
+  );
+  return user ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function AppLayout() {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return (
+    <div className="app-root" style={{ alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🎵</div>
+        <div className="spinner" style={{ width: 36, height: 36, margin: '0 auto' }} />
+        <p style={{ color: 'var(--color-text-secondary)', marginTop: 16 }}>Loading BloomeeTunes...</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="app-root">
+      {user && <Sidebar />}
+      <div className="main-content">
+        <div className="page-area">
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={user ? <Navigate to="/" replace /> : <LoginPage />} />
+            <Route path="/register" element={user ? <Navigate to="/" replace /> : <RegisterPage />} />
+
+            {/* Main pages (accessible but some features need auth) */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/library" element={<LibraryPage />} />
+            <Route path="/player" element={<PlayerPage />} />
+            <Route path="/playlist/:id" element={<PlaylistDetailPage />} />
+
+            {/* Protected pages */}
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/themes" element={<ThemesPage />} />
+            <Route path="/support" element={<SupportChatPage />} />
+            <Route path="/liked" element={<LikedSongsPage />} />
+            <Route path="/recently-played" element={<RecentlyPlayedPage />} />
+            <Route path="/downloads" element={<DownloadsPage />} />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </div>
+      {user && <MiniPlayer />}
+      {user && <BottomNav />}
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <PlayerProvider>
+              <AppLayout />
+            </PlayerProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  );
+}
