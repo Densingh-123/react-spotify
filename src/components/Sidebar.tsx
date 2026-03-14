@@ -1,12 +1,16 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { IoHome, IoSearch, IoLibrary, IoSettings, IoChatbubbles, IoMusicalNotes } from 'react-icons/io5';
+import { IoHome, IoSearch, IoLibrary, IoSettings, IoChatbubbles, IoMusicalNotes, IoStatsChart, IoPeople } from 'react-icons/io5';
 import { useAuth } from '@/context/AuthContext';
 
 const NAV_ITEMS = [
   { to: '/', icon: IoHome, label: 'Home' },
   { to: '/search', icon: IoSearch, label: 'Search' },
   { to: '/library', icon: IoLibrary, label: 'Library' },
+  { to: '/collab', icon: IoPeople, label: 'Collab Playlists' },
+  { to: '/ringtones', icon: IoMusicalNotes, label: 'Ringtones' },
+  { to: '/stats', icon: IoStatsChart, label: 'Listening Stats' },
+  { to: '/blend', icon: IoPeople, label: 'Blend' },
   { to: '/settings', icon: IoSettings, label: 'Settings' },
   { to: '/support', icon: IoChatbubbles, label: 'Support' },
 ];

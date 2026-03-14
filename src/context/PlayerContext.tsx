@@ -19,6 +19,12 @@ interface PlayerContextType {
   jumpToQueueIndex: (index: number) => Promise<void>;
   setRepeat: (mode: 'off' | 'track' | 'queue') => void;
   reset: () => void;
+  eqBands: number[];
+  getEqGain: (index: number) => number;
+  setEqGain: (index: number, value: number) => void;
+  isShuffled: boolean;
+  toggleShuffle: () => void;
+  setSleepTimer: (minutes: number) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -52,6 +58,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       jumpToQueueIndex: (i) => MusicPlayerService.jumpToQueueIndex(i),
       setRepeat: (m) => MusicPlayerService.setRepeat(m),
       reset: () => MusicPlayerService.reset(),
+      eqBands: MusicPlayerService.eqBands,
+      getEqGain: (i) => MusicPlayerService.getEqGain(i),
+      setEqGain: (i, v) => MusicPlayerService.setEqGain(i, v),
+      isShuffled: MusicPlayerService.isShuffled,
+      toggleShuffle: () => MusicPlayerService.toggleShuffle(),
+      setSleepTimer: (m) => MusicPlayerService.setSleepTimer(m),
     }}>
       {children}
     </PlayerContext.Provider>

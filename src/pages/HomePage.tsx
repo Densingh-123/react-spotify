@@ -179,7 +179,12 @@ export default function HomePage() {
         <div className="h-scroll">
           {GENRES.map(g => (
             <div key={g.label} className="genre-card"
-              onClick={() => navigate(`/playlist/${g.label.toLowerCase()}?name=${encodeURIComponent(g.label)}&query=${encodeURIComponent(GENRE_QUERIES[g.label] || g.label)}`)}>
+              onClick={() => {
+                const query = preferences?.languages?.length 
+                  ? `${preferences.languages.join(' ')} ${GENRE_QUERIES[g.label] || g.label}`
+                  : (GENRE_QUERIES[g.label] || g.label);
+                navigate(`/playlist/${g.label.toLowerCase()}?name=${encodeURIComponent(g.label)}&query=${encodeURIComponent(query)}`);
+              }}>
               <img src={g.image} alt={g.label} className="genre-card-img" />
               <div className="genre-card-overlay" style={{ background: `linear-gradient(to top, ${g.color}EE, transparent)` }}>
                 <span className="genre-label">{g.label}</span>

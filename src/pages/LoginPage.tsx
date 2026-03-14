@@ -27,13 +27,23 @@ export default function LoginPage() {
   };
 
   const handleGoogle = async () => {
+    if (!auth) {
+      setError('Firebase Auth not initialized correctly.');
+      return;
+    }
     setLoading(true); setError('');
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      console.log('Attempting Google Sign-In with:', { auth, provider });
+      await signInWithPopup(auth, provider);
       navigate('/');
     } catch (err: any) {
+      console.error('Google Sign-In Error:', err);
       const m = err.code === 'auth/popup-blocked' ? 'Popup blocked! Please allow popups for this site.'
-        : err.code === 'auth/popup-closed-by-user' ? 'Login popup was closed.' : err.message;
+        : err.code === 'auth/popup-closed-by-user' ? 'Login popup was closed.' 
+        : err.code === 'auth/argument-error' ? 'Configuration error (auth/argument-error). Please verify your Firebase project setup.'
+        : err.message || 'An unexpected error occurred during Google Sign-In.';
       setError(m);
     } finally { setLoading(false); }
   };

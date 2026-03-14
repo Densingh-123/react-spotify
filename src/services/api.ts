@@ -29,6 +29,7 @@ export interface SongItem {
   album?: string;
   streamUrl?: string;
   fullStreamUrl?: string;
+  previewUrl?: string;
 }
 
 const CORS_PROXY = import.meta.env.VITE_CORS_PROXY || 'https://api.codetabs.com/v1/proxy/?quest=';
@@ -38,6 +39,38 @@ const LRCLIB_API_BASE = import.meta.env.VITE_LRCLIB_API_BASE || 'https://lrclib.
 
 const fetchViaProxy = (url: string) =>
   fetch(`${CORS_PROXY}${encodeURIComponent(url)}`);
+
+export const getProxiedUrl = (url: string) => {
+  if (!url) return '';
+  if (url.includes('api.codetabs.com') || url.includes('corsproxy.io')) return url;
+  return `${CORS_PROXY}${encodeURIComponent(url)}`;
+};
+
+/**
+ * Unified helper to get a playable audio URL with automatic fallback
+ */
+export const getPlayableAudioUrl = async (song: SongItem): Promise<string | null> => {
+  // Try 1: Saavn Preview URL (Proxied) - Best for Ringtones
+  if (song.previewUrl) {
+    const proxied = getProxiedUrl(song.previewUrl);
+    try {
+      const res = await fetch(proxied, { method: 'HEAD' });
+      if (res.ok && res.headers.get('content-length') !== '0') return proxied;
+    } catch {}
+  }
+
+  // Try 2: Saavn Full Stream (if decoded)
+  if (song.streamUrl && song.streamUrl.length > 20 && !song.streamUrl.includes('dummy')) {
+    return getProxiedUrl(song.streamUrl);
+  }
+
+  // Try 3: YouTube/Piped Stream via ID
+  const stream = await getStreamUrl(song.id).catch(() => null);
+  if (stream) return stream;
+
+  // Try 4: Search YouTube by Title/Artist
+  return await getFullStreamUrl(song.title, song.artist);
+};
 
 export const getStreamUrl = async (videoId: string): Promise<string | null> => {
   try {
@@ -100,6 +133,7 @@ const mapTrack = (track: any): SongItem => ({
   artist: unescapeHtml(track.more_info?.music || track.subtitle || track.primary_artists || 'Unknown Artist'),
   artworkUrl: getHighResImage(track.image),
   streamUrl: decodeSaavnUrl(track.more_info?.encrypted_media_url || track.encrypted_media_url || ''),
+  previewUrl: track.more_info?.preview_url || track.media_preview_url || '',
 });
 
 const saavnFetch = async (url: string) => {
@@ -134,6 +168,41 @@ export const searchMusic = async (query: string, offset = 0): Promise<SongItem[]
     return results.map(mapTrack);
   } catch (error) {
     console.error('Error searching music:', error);
+    return [];
+  }
+};
+
+export const searchSongs = searchMusic;
+
+export const searchRingtones = async (query: string, languages: string[] = ['Tamil']): Promise<SongItem[]> => {
+  try {
+    // Search the query directly first - most Saavn songs have 30s previews anyway
+    const url = `${SAAVN_API_BASE}?p=1&q=${encodeURIComponent(query)}&_format=json&_marker=0&ctx=wap6dot0&n=30&__call=search.getResults`;
+    let results = await saavnFetch(url);
+    
+    // If no results, try appending ' ringtone' as a fallback
+    if (results.length === 0) {
+      const fallbackUrl = `${SAAVN_API_BASE}?p=1&q=${encodeURIComponent(query + ' ringtone')}&_format=json&_marker=0&ctx=wap6dot0&n=30&__call=search.getResults`;
+      results = await saavnFetch(fallbackUrl);
+    }
+
+    return results.map(mapTrack);
+  } catch (error) {
+    console.error('Error searching ringtones:', error);
+    return [];
+  }
+};
+
+export const fetchTrendingRingtones = async (languages: string[] = ['Tamil']): Promise<SongItem[]> => {
+  try {
+    const lang = languages[0] || 'Tamil';
+    const query = encodeURIComponent(`${lang} instrumental hits`);
+    const url = `${SAAVN_API_BASE}?p=1&q=${query}&_format=json&_marker=0&ctx=wap6dot0&n=40&__call=search.getResults`;
+    const results = await saavnFetch(url);
+    // Filter for things that likely have previews or sound like ringtones
+    return results.map(mapTrack).filter(s => s.previewUrl || s.title.toLowerCase().includes('tone'));
+  } catch (error) {
+    console.error('Error fetching trending ringtones:', error);
     return [];
   }
 };

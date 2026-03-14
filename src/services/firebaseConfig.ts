@@ -13,16 +13,14 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
+console.log('Firebase Config loaded:', { 
+  hasApiKey: !!firebaseConfig.apiKey, 
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId 
+});
+
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-
-let authInternal: any;
-try {
-  authInternal = initializeAuth(app, { persistence: browserLocalPersistence });
-} catch {
-  authInternal = getAuth(app);
-}
-
-export const auth = authInternal;
+export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 isSupported().then(yes => yes && getAnalytics(app));

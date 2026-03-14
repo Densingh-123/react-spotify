@@ -23,6 +23,13 @@ import LikedSongsPage from './pages/LikedSongsPage';
 import RecentlyPlayedPage from './pages/RecentlyPlayedPage';
 import DownloadsPage from './pages/DownloadsPage';
 import ArtistPage from './pages/ArtistPage';
+import RingtonesPage from './pages/RingtonesPage';
+import RingtoneEditPage from './pages/RingtoneEditPage';
+import StatsPage from './pages/StatsPage';
+import BlendPage from './pages/BlendPage';
+import CollaborationHubPage from './pages/CollaborationHubPage';
+import CollabDetailPage from './pages/CollabDetailPage';
+import PlaylistManagementPage from './pages/PlaylistManagementPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } }
@@ -75,6 +82,14 @@ function AppLayout() {
             <Route path="/recently-played" element={<RecentlyPlayedPage />} />
             <Route path="/downloads" element={<DownloadsPage />} />
             <Route path="/artist/:name" element={<ArtistPage />} />
+            <Route path="/ringtones" element={<RingtonesPage />} />
+            <Route path="/ringtones/edit/:id" element={<RingtoneEditPage />} />
+            <Route path="/stats" element={<StatsPage />} />
+            <Route path="/blend" element={<BlendPage />} />
+            <Route path="/blend/:partnerId" element={<BlendPage />} />
+            <Route path="/collab" element={<CollaborationHubPage />} />
+            <Route path="/collab/:id" element={<CollabDetailPage />} />
+            <Route path="/manage/:id" element={<PlaylistManagementPage />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

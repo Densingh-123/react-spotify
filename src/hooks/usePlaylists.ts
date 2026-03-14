@@ -70,5 +70,14 @@ export const usePlaylists = () => {
     }
   };
 
-  return { playlists, loading, createPlaylist, addSongToPlaylist, createSmartCollection };
+  const deletePlaylist = async (playlistId: string) => {
+    const { deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'playlists', playlistId));
+  };
+
+  const setPlaylistSongs = async (playlistId: string, songs: any[]) => {
+    await updateDoc(doc(db, 'playlists', playlistId), { songs });
+  };
+
+  return { playlists, loading, createPlaylist, addSongToPlaylist, setPlaylistSongs, deletePlaylist, createSmartCollection };
 };

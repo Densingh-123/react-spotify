@@ -2,6 +2,7 @@ import React from 'react';
 import { SongItem } from '@/services/api';
 import { IoHeart, IoDownload, IoList, IoShareSocial, IoMusicalNotes, IoAddCircle, IoClose } from 'react-icons/io5';
 import { useLikes } from '@/hooks/useLikes';
+import { useDownloads } from '@/hooks/useDownloads';
 
 interface Props {
   visible: boolean;
@@ -12,6 +13,7 @@ interface Props {
 
 export default function SongOptionsMenu({ visible, onClose, song, onAddToPlaylist }: Props) {
   const { toggleLike, isLiked } = useLikes();
+  const { downloadSong, isDownloaded } = useDownloads();
   if (!visible || !song) return null;
 
   const liked = isLiked(song.id);
@@ -19,7 +21,7 @@ export default function SongOptionsMenu({ visible, onClose, song, onAddToPlaylis
   const options = [
     { icon: <IoHeart size={22} color={liked ? '#e91e63' : 'var(--color-primary)'} />, label: liked ? 'Unlike Song' : 'Like Song', action: () => { toggleLike(song); onClose(); } },
     { icon: <IoAddCircle size={22} color="var(--color-primary)" />, label: 'Add to Playlist', action: () => { if (onAddToPlaylist) onAddToPlaylist(); else onClose(); } },
-    { icon: <IoDownload size={22} color="var(--color-primary)" />, label: 'Download Song', action: () => { window.open(song.streamUrl || '', '_blank'); onClose(); } },
+    { icon: <IoDownload size={22} color={isDownloaded(song.id) ? '#4caf50' : 'var(--color-primary)'} />, label: isDownloaded(song.id) ? 'Downloaded' : 'Download Song', action: () => { downloadSong(song); onClose(); } },
     { icon: <IoShareSocial size={22} color="var(--color-primary)" />, label: 'Share Song', action: () => { navigator.share?.({ title: song.title, text: `${song.title} by ${song.artist}` }); onClose(); } },
     { icon: <IoList size={22} color="var(--color-primary)" />, label: 'View Queue', action: onClose },
     { icon: <IoMusicalNotes size={22} color="var(--color-primary)" />, label: 'Go to Artist', action: onClose },

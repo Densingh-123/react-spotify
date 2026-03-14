@@ -1,17 +1,20 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoChevronDown, IoEllipsisHorizontal, IoPlaySkipBack, IoPlaySkipForward, IoPlay, IoPause, IoShuffle, IoRepeat, IoHeart, IoHeartOutline, IoClose, IoAddCircle, IoDownload, IoList, IoShareSocial, IoMusicalNotes } from 'react-icons/io5';
+import { IoChevronDown, IoChevronBack, IoEllipsisHorizontal, IoEllipsisVertical, IoPlaySkipBack, IoPlaySkipForward, IoPlay, IoPause, IoShuffle, IoRepeat, IoHeart, IoHeartOutline, IoClose, IoAddCircle, IoDownload, IoDownloadOutline, IoList, IoShareSocial, IoMusicalNotes, IoMoon } from 'react-icons/io5';
 import { usePlayer } from '@/context/PlayerContext';
 import { useLikes } from '@/hooks/useLikes';
+import { useDownloads } from '@/hooks/useDownloads';
 import { getLyrics, LyricLine, SongItem } from '@/services/api';
 import { useTheme } from '@/context/ThemeContext';
 import PlaylistPickerModal from '@/components/PlaylistPickerModal';
+import EqualizerModal from '@/components/EqualizerModal';
 
 export default function PlayerPage() {
   const { colors } = useTheme();
   const navigate = useNavigate();
-  const { currentTrack, isPlaying, position, duration, togglePlay, skipNext, skipPrev, seekTo, repeatMode, setRepeat, queue, jumpToQueueIndex } = usePlayer();
-  const { toggleLike, isLiked } = useLikes();
+  const { currentTrack, queue, currentIndex, isPlaying, position, duration, repeatMode, setRepeat, playTrack, togglePlay, skipNext, skipPrev, isShuffled, toggleShuffle, setSleepTimer, seekTo, jumpToQueueIndex } = usePlayer();
+  const { isLiked, toggleLike } = useLikes();
+  const { downloadedSongs, downloadSong, removeDownloadRecord, isDownloaded } = useDownloads();
 
   const [showMenu, setShowMenu] = useState(false);
   const [lyrics, setLyrics] = useState<LyricLine[]>([]);
@@ -21,6 +24,9 @@ export default function PlayerPage() {
   const lyricsRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'lyrics' | 'queue'>('lyrics');
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [eqVisible, setEqVisible] = useState(false);
+  const [timerVisible, setTimerVisible] = useState(false);
+  const [timerMinutes, setTimerMinutes] = useState('15');
 
   const progressPercent = duration > 0 ? Math.min(1, Math.max(0, position / duration)) : 0;
   const displayPercent = isSeeking ? seekValue : progressPercent;
@@ -95,7 +101,7 @@ export default function PlayerPage() {
   const menuOptions = [
     { icon: <IoHeart size={20} color={liked ? '#e91e63' : colors.primary} />, label: liked ? 'Unlike Song' : 'Like Song', action: () => { if (currentTrack) toggleLike(currentTrack as SongItem); setShowMenu(false); } },
     { icon: <IoAddCircle size={20} color={colors.primary} />, label: 'Add to Playlist', action: () => { setPickerVisible(true); setShowMenu(false); } },
-    { icon: <IoDownload size={20} color={colors.primary} />, label: 'Download Song', action: () => { if (currentTrack?.streamUrl) window.open(currentTrack.streamUrl, '_blank'); setShowMenu(false); } },
+    { icon: <IoDownload size={20} color={currentTrack && isDownloaded(currentTrack.id) ? '#4caf50' : colors.primary} />, label: currentTrack && isDownloaded(currentTrack.id) ? 'Downloaded' : 'Download Song', action: () => { if (currentTrack) downloadSong(currentTrack as SongItem); setShowMenu(false); } },
     { icon: <IoList size={20} color={colors.primary} />, label: 'View Queue', action: () => { setActiveTab('queue'); setShowMenu(false); } },
     { icon: <IoShareSocial size={20} color={colors.primary} />, label: 'Share Song', action: () => { navigator.share?.({ title: currentTrack.title, text: `${currentTrack.title} by ${currentTrack.artist}` }); setShowMenu(false); } },
   ];
@@ -163,26 +169,29 @@ export default function PlayerPage() {
       </div>
 
       {/* Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center', marginBottom: 24 }}>
-        <button className="icon-btn" style={{ color: colors.textSecondary }}><IoShuffle size={26} /></button>
-        <button className="icon-btn" style={{ color: colors.text }} onClick={() => skipPrev()}><IoPlaySkipBack size={42} /></button>
+      <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'center', marginBottom: 24, gap: 4 }}>
+        <button className="icon-btn" onClick={() => setEqVisible(true)} style={{ color: colors.textSecondary, fontSize: 13, fontWeight: 700, padding: 8, border: `1px solid ${colors.glassBorder}`, borderRadius: 12 }}>EQ</button>
+        <button className="icon-btn" onClick={() => toggleShuffle()} style={{ color: isShuffled ? colors.primary : colors.textSecondary }}><IoShuffle size={26} /></button>
+        <button className="icon-btn" style={{ color: colors.text }} onClick={() => skipPrev()}><IoPlaySkipBack size={36} /></button>
         <button
           onClick={() => togglePlay()}
           style={{
             width: 76, height: 76, borderRadius: '50%', background: colors.primary, border: 'none',
             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
             boxShadow: `0 6px 20px ${colors.primary}77`, transition: 'transform 0.15s',
+            flexShrink: 0
           }}
           onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.92)')}
           onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}
         >
           {isPlaying ? <IoPause size={44} color="#fff" /> : <IoPlay size={44} color="#fff" style={{ marginLeft: 4 }} />}
         </button>
-        <button className="icon-btn" style={{ color: colors.text }} onClick={() => skipNext()}><IoPlaySkipForward size={42} /></button>
+        <button className="icon-btn" style={{ color: colors.text }} onClick={() => skipNext()}><IoPlaySkipForward size={36} /></button>
         <button className="icon-btn" style={{ color: repeatMode !== 'off' ? colors.primary : colors.textSecondary }} onClick={cyclRepeat}>
           <IoRepeat size={26} />
           {repeatMode === 'track' && <span style={{ position: 'absolute', fontSize: 8, bottom: 2, fontWeight: 900 }}>1</span>}
         </button>
+        <button className="icon-btn" onClick={() => setTimerVisible(true)} style={{ color: colors.textSecondary, paddingTop: 4 }}><IoMoon size={24} /></button>
       </div>
 
       {/* Tab Switcher */}
@@ -312,6 +321,42 @@ export default function PlayerPage() {
         onClose={() => setPickerVisible(false)} 
         song={currentTrack as SongItem} 
       />
+      <EqualizerModal
+        visible={eqVisible}
+        onClose={() => setEqVisible(false)}
+      />
+      {timerVisible && (
+        <div className="modal-backdrop" onClick={() => setTimerVisible(false)} style={{ zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ width: '90%', maxWidth: 360, padding: 32, borderRadius: 32, position: 'relative', bottom: 'auto', textAlign: 'center' }}>
+            <IoMoon size={48} color={colors.primary} style={{ marginBottom: 16 }} />
+            <h3 style={{ fontSize: 24, fontWeight: 900, color: colors.text, marginBottom: 8 }}>Sleep Timer</h3>
+            <p style={{ color: colors.textSecondary, marginBottom: 24 }}>Stop playing music automatically after...</p>
+            
+            <input
+              type="number"
+              value={timerMinutes}
+              onChange={(e) => setTimerMinutes(e.target.value)}
+              style={{
+                width: 100, padding: 16, fontSize: 32, fontWeight: 900, textAlign: 'center',
+                background: colors.surfaceHighlight, color: colors.text, border: `2px solid ${colors.glassBorder}`,
+                borderRadius: 16, outline: 'none', marginBottom: 24
+              }}
+            />
+            <span style={{ fontSize: 20, fontWeight: 700, color: colors.textSecondary, marginLeft: 12 }}>mins</span>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button 
+                onClick={() => { setSleepTimer(0); setTimerVisible(false); }}
+                style={{ flex: 1, padding: '16px 0', borderRadius: 16, background: 'transparent', color: colors.textSecondary, border: `1px solid ${colors.glassBorder}`, fontWeight: 800, cursor: 'pointer' }}
+              >Off</button>
+              <button 
+                onClick={() => { setSleepTimer(parseInt(timerMinutes) || 0); setTimerVisible(false); }}
+                style={{ flex: 1, padding: '16px 0', borderRadius: 16, background: colors.primary, color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', boxShadow: `0 8px 24px ${colors.primary}66` }}
+              >Start Timer</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
