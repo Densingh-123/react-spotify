@@ -12,12 +12,27 @@ export const useRecentlyPlayed = (limitCount = 10) => {
     const unsubAuth = auth.onAuthStateChanged((user) => {
       if (unsubSnap) { unsubSnap(); unsubSnap = null; }
       if (!user) { setRecentlyPlayed([]); setLoading(false); return; }
-      const q = query(collection(db, 'recentlyPlayed'), where('userId', '==', user.uid), orderBy('playedAt', 'desc'), limit(limitCount));
+      const q = query(collection(db, 'recentlyPlayed'), where('userId', '==', user.uid));
       unsubSnap = onSnapshot(q, (snap) => {
-        setRecentlyPlayed(snap.docs.map(d => {
+        const songs = snap.docs.map(d => {
           const data = d.data();
-          return { id: data.songId, title: data.title, artist: data.artist, artworkUrl: data.artworkUrl, streamUrl: data.streamUrl } as SongItem;
-        }));
+          return {
+            id: data.songId,
+            title: data.title,
+            artist: data.artist,
+            artworkUrl: data.artworkUrl,
+            streamUrl: data.streamUrl,
+            playedAt: data.playedAt?.toDate?.() || new Date(0) // Handle firestore timestamp
+          } as any;
+        });
+
+        // Sort by playedAt desc and limit locally
+        const sorted = songs
+          .sort((a, b) => b.playedAt - a.playedAt)
+          .slice(0, limitCount)
+          .map(({ playedAt, ...s }) => s as SongItem);
+
+        setRecentlyPlayed(sorted);
         setLoading(false);
       }, () => setLoading(false));
     });

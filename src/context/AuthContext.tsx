@@ -5,14 +5,20 @@ import { auth } from '@/services/firebaseConfig';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  preferences: { languages: string[] };
+  prefLoading: boolean;
+  updateLanguages: (langs: string[]) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { preferences, loading: prefLoading, updateLanguages } = useUserPreferences();
 
   useEffect(() => {
     return onAuthStateChanged(auth, (currentUser) => {
@@ -24,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => { await firebaseSignOut(auth); };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading, preferences, prefLoading, updateLanguages, signOut }}>
       {children}
     </AuthContext.Provider>
   );

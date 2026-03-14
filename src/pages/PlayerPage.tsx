@@ -5,6 +5,7 @@ import { usePlayer } from '@/context/PlayerContext';
 import { useLikes } from '@/hooks/useLikes';
 import { getLyrics, LyricLine, SongItem } from '@/services/api';
 import { useTheme } from '@/context/ThemeContext';
+import PlaylistPickerModal from '@/components/PlaylistPickerModal';
 
 export default function PlayerPage() {
   const { colors } = useTheme();
@@ -19,6 +20,7 @@ export default function PlayerPage() {
   const progressRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'lyrics' | 'queue'>('lyrics');
+  const [pickerVisible, setPickerVisible] = useState(false);
 
   const progressPercent = duration > 0 ? Math.min(1, Math.max(0, position / duration)) : 0;
   const displayPercent = isSeeking ? seekValue : progressPercent;
@@ -92,9 +94,9 @@ export default function PlayerPage() {
 
   const menuOptions = [
     { icon: <IoHeart size={20} color={liked ? '#e91e63' : colors.primary} />, label: liked ? 'Unlike Song' : 'Like Song', action: () => { if (currentTrack) toggleLike(currentTrack as SongItem); setShowMenu(false); } },
-    { icon: <IoAddCircle size={20} color={colors.primary} />, label: 'Add to Playlist', action: () => { setShowMenu(false); } },
+    { icon: <IoAddCircle size={20} color={colors.primary} />, label: 'Add to Playlist', action: () => { setPickerVisible(true); setShowMenu(false); } },
     { icon: <IoDownload size={20} color={colors.primary} />, label: 'Download Song', action: () => { if (currentTrack?.streamUrl) window.open(currentTrack.streamUrl, '_blank'); setShowMenu(false); } },
-    { icon: <IoList size={20} color={colors.primary} />, label: 'View Queue', action: () => setShowMenu(false) },
+    { icon: <IoList size={20} color={colors.primary} />, label: 'View Queue', action: () => { setActiveTab('queue'); setShowMenu(false); } },
     { icon: <IoShareSocial size={20} color={colors.primary} />, label: 'Share Song', action: () => { navigator.share?.({ title: currentTrack.title, text: `${currentTrack.title} by ${currentTrack.artist}` }); setShowMenu(false); } },
   ];
 
@@ -124,7 +126,12 @@ export default function PlayerPage() {
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24, gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentTrack.title}</div>
-          <div style={{ fontSize: 15, color: colors.textSecondary, marginTop: 4 }}>{currentTrack.artist}</div>
+          <div 
+            onClick={() => navigate(`/artist/${encodeURIComponent(currentTrack.artist)}`)}
+            style={{ fontSize: 15, color: colors.textSecondary, marginTop: 4, cursor: 'pointer', display: 'inline-block' }}
+          >
+            {currentTrack.artist}
+          </div>
         </div>
         <button className="icon-btn" onClick={() => toggleLike(currentTrack as SongItem)} style={{ color: liked ? '#e91e63' : colors.textSecondary, flexShrink: 0 }}>
           {liked ? <IoHeart size={28} /> : <IoHeartOutline size={28} />}
@@ -300,6 +307,11 @@ export default function PlayerPage() {
           </div>
         </div>
       )}
+      <PlaylistPickerModal 
+        visible={pickerVisible} 
+        onClose={() => setPickerVisible(false)} 
+        song={currentTrack as SongItem} 
+      />
     </div>
   );
 }

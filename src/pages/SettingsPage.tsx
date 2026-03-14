@@ -1,13 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoChevronForward, IoLogOut, IoPerson, IoColorPalette, IoLockClosed, IoHelpCircle, IoInformationCircle, IoMusicalNotes, IoDownload, IoTime, IoHeart } from 'react-icons/io5';
+import { IoChevronForward, IoLogOut, IoPerson, IoColorPalette, IoLockClosed, IoHelpCircle, IoInformationCircle, IoMusicalNotes, IoDownload, IoTime, IoHeart, IoGlobeOutline, IoCheckmarkCircle } from 'react-icons/io5';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function SettingsPage() {
   const { colors } = useTheme();
   const nav = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, preferences, updateLanguages } = useAuth();
+  const [langModalVisible, setLangModalVisible] = useState(false);
+  const [tempLangs, setTempLangs] = useState<string[]>(preferences?.languages || []);
+
+  const LANGUAGES = [
+    'English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Marathi', 'Bengali', 'Bhojpuri', 'Malayalam', 'Gujarati', 'Punjabi'
+  ];
+
+  const handleSaveLangs = async () => {
+    if (tempLangs.length === 0) return;
+    await updateLanguages(tempLangs);
+    setLangModalVisible(false);
+  };
+
+  const toggleLang = (lang: string) => {
+    setTempLangs(prev => prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -25,6 +41,7 @@ export default function SettingsPage() {
     {
       title: 'Music',
       items: [
+        { icon: IoGlobeOutline, label: 'Music Languages', sub: preferences?.languages?.join(', ') || 'English, Tamil', action: () => { setTempLangs(preferences?.languages || []); setLangModalVisible(true); } },
         { icon: IoDownload, label: 'Downloads', sub: 'Offline songs', action: () => nav('/downloads') },
         { icon: IoTime, label: 'Recently Played', sub: 'Your history', action: () => nav('/recently-played') },
         { icon: IoHeart, label: 'Liked Songs', sub: 'Your favorites', action: () => nav('/liked') },
@@ -126,6 +143,50 @@ export default function SettingsPage() {
           Melodify v1.0.0 — Made with ❤️
         </p>
       </div>
+
+      {/* Language Selection Modal */}
+      {langModalVisible && (
+        <div className="modal-backdrop center" onClick={() => setLangModalVisible(false)}>
+          <div className="modal-center-card" onClick={e => e.stopPropagation()} style={{ maxWidth: 450 }}>
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ width: 60, height: 60, borderRadius: 20, background: colors.primary + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <IoGlobeOutline size={32} color={colors.primary} />
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: colors.text }}>Music Languages</h2>
+              <p style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>Select languages for your personalized feed</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, maxHeight: 300, overflowY: 'auto', padding: '4px' }}>
+              {LANGUAGES.map(lang => {
+                const isSelected = tempLangs.includes(lang);
+                return (
+                  <button
+                    key={lang}
+                    onClick={() => toggleLang(lang)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '12px 14px', borderRadius: 14, background: isSelected ? colors.primary + '15' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${isSelected ? colors.primary + '44' : 'transparent'}`,
+                      color: isSelected ? colors.primary : colors.text,
+                      fontSize: 14, fontWeight: 700, transition: 'all 0.2s',
+                    }}
+                  >
+                    {lang}
+                    {isSelected && <IoCheckmarkCircle size={18} color={colors.primary} />}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+              <button className="btn-ghost" style={{ flex: 1 }} onClick={() => setLangModalVisible(false)}>Cancel</button>
+              <button className="btn-primary" style={{ flex: 1, background: colors.primary }} onClick={handleSaveLangs}>
+                Save Preferences
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

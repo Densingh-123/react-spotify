@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoMusicalNotes, IoNotificationsOutline, IoSettingsOutline, IoChevronForward, IoEllipsisHorizontal, IoLockClosed, IoFlame } from 'react-icons/io5';
+import { IoMusicalNotes, IoNotificationsOutline, IoSettingsOutline, IoChevronForward, IoEllipsisHorizontal, IoLockClosed, IoFlame, IoGlobeOutline, IoCheckmarkCircle } from 'react-icons/io5';
 import { useTrendingMusic } from '@/hooks/useMusicData';
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
 import { useAuth } from '@/context/AuthContext';
@@ -31,9 +31,13 @@ const GENRES = [
 const GENRE_QUERIES: Record<string, string> = {
   Pop: 'pop hits 2024', Chill: 'lofi chill beats', Workout: 'workout motivation',
   Rock: 'classic rock anthems', Party: 'party dance hits', Jazz: 'smooth jazz collection',
-  Melody: 'tamil melody songs', Dance: 'folk dance songs', Devotional: 'devotional tracks',
+  Melody: 'melody songs', Dance: 'folk dance songs', Devotional: 'devotional tracks',
   Classical: 'indian classical music', Folk: 'village folk music', 'Hip-Hop': 'hip hop beats 2024',
 };
+
+const LANGUAGES = [
+  'English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Marathi', 'Bengali', 'Bhojpuri', 'Malayalam', 'Gujarati', 'Punjabi'
+];
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -45,13 +49,15 @@ function getGreeting() {
 export default function HomePage() {
   const { colors } = useTheme();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, preferences, prefLoading, updateLanguages } = useAuth();
   const { playTrack } = usePlayer();
-  const { data: trending, isLoading, refetch } = useTrendingMusic();
+  const { data: trending, isLoading, refetch } = useTrendingMusic(preferences?.languages);
   const { recentlyPlayed } = useRecentlyPlayed(12);
   const [selectedSong, setSelectedSong] = useState<SongItem | null>(null);
   const [optionsVisible, setOptionsVisible] = useState(false);
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [langModalVisible, setLangModalVisible] = useState(false);
+  const [tempLangs, setTempLangs] = useState<string[]>(preferences?.languages || []);
 
   const featured = trending?.slice(0, 3) || [];
   const topCharts = trending?.slice(3, 11) || [];
@@ -69,6 +75,24 @@ export default function HomePage() {
   const openOptions = (song: SongItem) => { setSelectedSong(song); setOptionsVisible(true); };
   const openPicker = () => { setOptionsVisible(false); setPickerVisible(true); };
 
+  const handleSaveLangs = async () => {
+    if (tempLangs.length === 0) return;
+    await updateLanguages(tempLangs);
+    setLangModalVisible(false);
+  };
+
+  const toggleLang = (lang: string) => {
+    setTempLangs(prev => prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]);
+  };
+
+  // Show lang modal for new users who haven't set prefs
+  useEffect(() => {
+    if (user && !prefLoading && (!preferences?.languages || preferences.languages.length === 0)) {
+      setLangModalVisible(true);
+      setTempLangs(['English', 'Tamil']);
+    }
+  }, [user, prefLoading, preferences]);
+
   return (
     <div style={{ padding: '0 16px 16px', overflowY: 'auto', height: '100%' }}>
       {/* Mobile Header */}
@@ -83,6 +107,9 @@ export default function HomePage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
+          <button className="icon-btn" onClick={() => { setTempLangs(preferences?.languages || []); setLangModalVisible(true); }} style={{ background: 'rgba(255,255,255,0.07)', color: colors.text }}>
+            <IoGlobeOutline size={20} />
+          </button>
           <button className="icon-btn" onClick={() => navigate('/settings')} style={{ background: 'rgba(255,255,255,0.07)', color: colors.text }}>
             <IoNotificationsOutline size={20} />
           </button>
@@ -213,6 +240,50 @@ export default function HomePage() {
 
       <SongOptionsMenu visible={optionsVisible} onClose={() => setOptionsVisible(false)} song={selectedSong} onAddToPlaylist={openPicker} />
       <PlaylistPickerModal visible={pickerVisible} onClose={() => setPickerVisible(false)} song={selectedSong} />
+
+      {/* Language Selection Modal */}
+      {langModalVisible && (
+        <div className="modal-backdrop center" onClick={() => setLangModalVisible(false)}>
+          <div className="modal-center-card" onClick={e => e.stopPropagation()} style={{ maxWidth: 450 }}>
+            <div style={{ textAlign: 'center', marginBottom: 20 }}>
+              <div style={{ width: 60, height: 60, borderRadius: 20, background: colors.primary + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <IoGlobeOutline size={32} color={colors.primary} />
+              </div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: colors.text }}>Preferred Languages</h2>
+              <p style={{ fontSize: 13, color: colors.textSecondary, marginTop: 4 }}>Select languages to personalize your music</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, maxHeight: 300, overflowY: 'auto', padding: '4px' }}>
+              {LANGUAGES.map(lang => {
+                const isSelected = tempLangs.includes(lang);
+                return (
+                  <button
+                    key={lang}
+                    onClick={() => toggleLang(lang)}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '12px 14px', borderRadius: 14, background: isSelected ? colors.primary + '15' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${isSelected ? colors.primary + '44' : 'transparent'}`,
+                      color: isSelected ? colors.primary : colors.text,
+                      fontSize: 14, fontWeight: 700, transition: 'all 0.2s',
+                    }}
+                  >
+                    {lang}
+                    {isSelected && <IoCheckmarkCircle size={18} color={colors.primary} />}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+              <button className="btn-ghost" style={{ flex: 1 }} onClick={() => setLangModalVisible(false)}>Cancel</button>
+              <button className="btn-primary" style={{ flex: 1, background: colors.primary }} onClick={handleSaveLangs} disabled={tempLangs.length === 0}>
+                Apply Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

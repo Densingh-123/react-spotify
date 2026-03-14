@@ -1,8 +1,8 @@
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { fetchTrending, searchMusic } from '@/services/api';
 
-export const useTrendingMusic = () =>
-  useQuery({ queryKey: ['trending'], queryFn: fetchTrending, staleTime: 1000 * 60 * 5 });
+export const useTrendingMusic = (languages?: string[]) =>
+  useQuery({ queryKey: ['trending', languages], queryFn: () => fetchTrending(languages), staleTime: 1000 * 60 * 5 });
 
 const PAGE_SIZE = 25;
 export const useSearchMusic = (query: string) =>

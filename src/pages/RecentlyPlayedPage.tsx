@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoChevronBack, IoTime } from 'react-icons/io5';
+import { IoChevronBack, IoTime, IoTrashOutline } from 'react-icons/io5';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/services/firebaseConfig';
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
 import { usePlayer } from '@/context/PlayerContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -20,6 +22,17 @@ export default function RecentlyPlayedPage() {
     const idx = recentlyPlayed.findIndex(s => s.id === item.id);
     await playTrack(item, recentlyPlayed, Math.max(0, idx));
     nav('/player');
+  };
+
+  const handleRemove = async (e: React.MouseEvent, songId: string) => {
+    e.stopPropagation();
+    if (!user) return;
+    try {
+      const docId = `${user.uid}_${songId}`;
+      await deleteDoc(doc(db, 'recentlyPlayed', docId));
+    } catch (err) {
+      console.error('Failed to remove from history:', err);
+    }
   };
 
   return (
@@ -47,6 +60,15 @@ export default function RecentlyPlayedPage() {
                 <div style={{ fontWeight: 700, fontSize: 14, color: colors.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
                 <div style={{ fontSize: 12, color: colors.textSecondary }}>{item.artist}</div>
               </div>
+              <button
+                className="icon-btn-small"
+                onClick={(e) => handleRemove(e, item.id)}
+                style={{ color: colors.textSecondary, opacity: 0.6 }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#ff4d4d', e.currentTarget.style.opacity = '1')}
+                onMouseLeave={e => (e.currentTarget.style.color = colors.textSecondary, e.currentTarget.style.opacity = '0.6')}
+              >
+                <IoTrashOutline size={18} />
+              </button>
             </div>
           ))
         }

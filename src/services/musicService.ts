@@ -1,6 +1,6 @@
 import { SongItem, getFullStreamUrl, getRecommendedSongs } from './api';
 import { db, auth } from './firebaseConfig';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, limit, doc, setDoc } from 'firebase/firestore';
 
 export type PlayerState = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
 
@@ -171,17 +171,8 @@ class MusicPlayerServiceClass {
     const user = auth.currentUser;
     if (!user) return;
     try {
-      // Check if already in recently played
-      const q = query(
-        collection(db, 'recentlyPlayed'),
-        where('userId', '==', user.uid),
-        where('songId', '==', track.id),
-        limit(1)
-      );
-      const existing = await getDocs(q);
-      if (!existing.empty) return;
-
-      await addDoc(collection(db, 'recentlyPlayed'), {
+      const docId = `${user.uid}_${track.id}`;
+      await setDoc(doc(db, 'recentlyPlayed', docId), {
         userId: user.uid,
         songId: track.id,
         title: track.title,
@@ -189,7 +180,7 @@ class MusicPlayerServiceClass {
         artworkUrl: track.artworkUrl,
         streamUrl: track.streamUrl || '',
         playedAt: serverTimestamp(),
-      });
+      }, { merge: true });
     } catch (e) {
       console.warn('Failed to track recently played:', e);
     }

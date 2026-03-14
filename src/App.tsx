@@ -22,6 +22,7 @@ import PlaylistDetailPage from './pages/PlaylistDetailPage';
 import LikedSongsPage from './pages/LikedSongsPage';
 import RecentlyPlayedPage from './pages/RecentlyPlayedPage';
 import DownloadsPage from './pages/DownloadsPage';
+import ArtistPage from './pages/ArtistPage';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } }
@@ -73,6 +74,7 @@ function AppLayout() {
             <Route path="/liked" element={<LikedSongsPage />} />
             <Route path="/recently-played" element={<RecentlyPlayedPage />} />
             <Route path="/downloads" element={<DownloadsPage />} />
+            <Route path="/artist/:name" element={<ArtistPage />} />
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

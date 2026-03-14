@@ -111,10 +111,11 @@ const saavnFetch = async (url: string) => {
   return results;
 };
 
-export const fetchTrending = async (): Promise<SongItem[]> => {
+export const fetchTrending = async (languages: string[] = ['Tamil', 'English']): Promise<SongItem[]> => {
   try {
-    const query = encodeURIComponent('tamil hits');
-    const url = `${SAAVN_API_BASE}?p=1&q=${query}&_format=json&_marker=0&ctx=wap6dot0&n=40&__call=search.getResults`;
+    const mainLang = languages[0] || 'Tamil';
+    const queryStr = `${mainLang.toLowerCase()} hits 2024`;
+    const url = `${SAAVN_API_BASE}?p=1&q=${encodeURIComponent(queryStr)}&_format=json&_marker=0&ctx=wap6dot0&n=40&__call=search.getResults`;
     const results = await saavnFetch(url);
     return results.map(mapTrack);
   } catch (error) {
@@ -146,20 +147,6 @@ export const getRecommendedSongs = async (track: SongItem): Promise<SongItem[]> 
     return results.filter(s => s.id !== track.id).slice(0, 10);
   } catch (error) {
     console.error('Error fetching recommendations:', error);
-    return [];
-  }
-};
-
-export const fetchRingtones = async (): Promise<SongItem[]> => {
-  try {
-    const query = encodeURIComponent('instrumental ringtones');
-    const url = `${SAAVN_API_BASE}?p=1&q=${query}&_format=json&_marker=0&ctx=wap6dot0&n=30&__call=search.getResults`;
-    const results = await saavnFetch(url);
-    return results.map((track: any) => ({
-      ...mapTrack(track),
-      title: mapTrack(track).title.replace(' (Ringtone)', '').replace(' Ringtone', ''),
-    }));
-  } catch {
     return [];
   }
 };

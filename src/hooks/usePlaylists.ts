@@ -5,6 +5,8 @@ import { auth, db } from '@/services/firebaseConfig';
 export interface Playlist {
   id: string; name: string; userId: string; createdAt: any;
   songs: any[]; color: string; icon: string;
+  type?: 'playlist' | 'smart_album' | 'artist_collection';
+  image?: string;
 }
 
 export const usePlaylists = () => {
@@ -35,5 +37,38 @@ export const usePlaylists = () => {
     await updateDoc(doc(db, 'playlists', playlistId), { songs: arrayUnion(song) });
   };
 
-  return { playlists, loading, createPlaylist, addSongToPlaylist };
+  const createSmartCollection = async (keyword: string, type: 'smart_album' | 'artist_collection', languages: string[] = ['Tamil']) => {
+    if (!auth.currentUser) return;
+    const { searchMusic } = await import('@/services/api');
+    
+    // Construct search query: "keyword languages songs"
+    const langSuffix = languages.length > 0 ? ` ${languages[0]}` : '';
+    const query = `${keyword}${langSuffix} ${type === 'smart_album' ? 'songs' : 'movie songs'}`;
+    
+    try {
+      const results = await searchMusic(query);
+      const songsToStore = results.slice(0, 25);
+      
+      const colors = ['#e91e63', '#673ab7', '#ff5722', '#009688', '#f57f17', '#6200ea', '#2196f3'];
+      const icons = type === 'smart_album' ? ['disc', 'musical-notes'] : ['person', 'headset'];
+      
+      // Try to use the first song's artwork as the collection image
+      const artworkUrl = songsToStore[0]?.artworkUrl || 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80';
+
+      await addDoc(collection(db, 'playlists'), {
+        name: keyword,
+        userId: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+        songs: songsToStore,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        icon: icons[Math.floor(Math.random() * icons.length)],
+        type: type,
+        image: artworkUrl // Add image for these collections
+      });
+    } catch (e) {
+      console.error('Failed to create smart collection:', e);
+    }
+  };
+
+  return { playlists, loading, createPlaylist, addSongToPlaylist, createSmartCollection };
 };
