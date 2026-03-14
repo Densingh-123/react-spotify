@@ -5,6 +5,7 @@ import { SongItem } from '@/services/api';
 interface PlayerContextType {
   currentTrack: PlayerTrack | null;
   queue: PlayerTrack[];
+  currentIndex: number;
   isPlaying: boolean;
   position: number;
   duration: number;
@@ -44,6 +45,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     <PlayerContext.Provider value={{
       currentTrack: MusicPlayerService.currentTrack,
       queue: MusicPlayerService.queue,
+      currentIndex: MusicPlayerService.currentIndex,
       isPlaying: MusicPlayerService.isPlaying,
       position: MusicPlayerService.position,
       duration: MusicPlayerService.duration,
