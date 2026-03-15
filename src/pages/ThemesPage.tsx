@@ -4,8 +4,14 @@ import { IoChevronBack, IoCheckmarkCircle } from 'react-icons/io5';
 import { useTheme, ThemeMode, themes } from '@/context/ThemeContext';
 
 const THEME_GROUPS = [
-  { title: '🌑 Dark Themes', keys: ['black','midnight','amoled','galaxy','ocean','forest','sunset','volcano','neon','cyberpunk','deep_blue','deep_purple','deep_red','deep_teal','deep_orange','matrix','dracula','nord_dark','synthwave','obsidian','charcoal','espresso','blood_moon','toxic','electric','royal_dark','emerald_dark','ruby','sapphire','twilight'] },
-  { title: '☀️ Light Themes', keys: ['white','snow','sky','mint','rose','lemon','peach','lavender','sakura','nord_light'] },
+  { title: ' Dark Themes', keys: ['black','midnight','amoled','galaxy','ocean','forest','sunset','volcano','neon','cyberpunk','deep_blue','deep_purple','deep_red','deep_teal','deep_orange','matrix','dracula','nord_dark','synthwave','obsidian','charcoal','espresso','blood_moon','toxic', 'electric','royal_dark','emerald_dark','ruby','sapphire','twilight'] },
+  { title: ' Light Themes', keys: ['white','snow','sky','mint','rose','lemon','peach','lavender','sakura','nord_light'] },
+  { title: ' Animated: Space', keys: ['twinkling_stars', 'galaxy_spiral', 'shooting_stars', 'nebula_clouds', 'floating_planets', 'asteroid_field', 'black_hole', 'constellation'] },
+  { title: ' Animated: Water', keys: ['ocean_waves', 'underwater_bubbles', 'sea_shore', 'coral_reef', 'deep_sea_glow', 'water_ripple', 'rain_on_water', 'floating_boats'] },
+  { title: ' Animated: Nature', keys: ['floating_leaves', 'cherry_blossom', 'moving_clouds', 'forest_fireflies', 'snowfall', 'butterflies', 'grass_sway', 'sunrise_gradient'] },
+  { title: ' Animated: Abstract', keys: ['glass_orbs', 'liquid_gradient', 'neon_lines', 'particle_network', 'floating_cubes', 'colorful_smoke', 'energy_waves', 'aurora_borealis'] },
+  { title: ' Animated: Tech', keys: ['digital_matrix', 'circuit_glow', 'ai_network', 'holographic_grid', 'data_stream', 'radar_scan'] },
+  { title: ' Animated: Creative', keys: ['floating_balloons', 'paper_planes', 'fireplace_glow'] },
 ];
 
 const DISPLAY_NAMES: Record<string, string> = {
@@ -18,6 +24,12 @@ const DISPLAY_NAMES: Record<string, string> = {
   emerald_dark:'Emerald Dark', ruby:'Ruby', sapphire:'Sapphire', twilight:'Twilight',
   white:'Pure White', snow:'Snow', sky:'Sky Blue', mint:'Mint', rose:'Rose',
   lemon:'Lemon', peach:'Peach', lavender:'Lavender', sakura:'Sakura', nord_light:'Nord Light',
+  twinkling_stars: 'Twinkling Stars', galaxy_spiral: 'Galaxy Spiral', shooting_stars: 'Shooting Stars', nebula_clouds: 'Nebula Clouds', floating_planets: 'Floating Planets', asteroid_field: 'Asteroid Field', black_hole: 'Black Hole', constellation: 'Constellation',
+  ocean_waves: 'Ocean Waves', underwater_bubbles: 'Underwater Bubbles', sea_shore: 'Sea Shore', coral_reef: 'Coral Reef', deep_sea_glow: 'Deep Sea Glow', water_ripple: 'Water Ripple', rain_on_water: 'Rainy Water', floating_boats: 'Floating Boats',
+  floating_leaves: 'Falling Leaves', cherry_blossom: 'Cherry Blossom', moving_clouds: 'Moving Clouds', forest_fireflies: 'Forest Fireflies', snowfall: 'Snowfall', butterflies: 'Butterflies', grass_sway: 'Swaying Grass', sunrise_gradient: 'Sunrise Sky',
+  glass_orbs: 'Glass Orbs', liquid_gradient: 'Liquid Gradient', neon_lines: 'Neon Lines', particle_network: 'Particle Network', floating_cubes: 'Floating Cubes', colorful_smoke: 'Colorful Smoke', energy_waves: 'Energy Waves', aurora_borealis: 'Aurora Borealis',
+  digital_matrix: 'Digital Matrix', circuit_glow: 'Circuit Board', ai_network: 'Neural Network', holographic_grid: 'Holographic Grid', data_stream: 'Data Stream', radar_scan: 'Radar Scan',
+  floating_balloons: 'Floating Balloons', paper_planes: 'Paper Planes', fireplace_glow: 'Fireplace Glow',
 };
 
 export default function ThemesPage() {

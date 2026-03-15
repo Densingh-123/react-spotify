@@ -35,9 +35,14 @@ export function useDownloads() {
       if (!streamUrl) throw new Error('Could not resolve stream URL');
 
       // 2. Fetch Audio Blob (must pass CORS)
-      const proxyUrl = import.meta.env.VITE_CORS_PROXY || 'https://cors-anywhere.herokuapp.com/';
-      const response = await fetch(proxyUrl + streamUrl);
-      if (!response.ok) throw new Error('Failed to fetch audio stream');
+      // We check if it's already proxied to avoid double-proxying
+      const finalUrl = (streamUrl.startsWith('http') && !streamUrl.includes('proxy')) 
+        ? (import.meta.env.VITE_CORS_PROXY || 'https://api.codetabs.com/v1/proxy/?quest=') + encodeURIComponent(streamUrl)
+        : streamUrl;
+      
+      console.log('Downloading from:', finalUrl);
+      const response = await fetch(finalUrl);
+      if (!response.ok) throw new Error(`Failed to fetch audio stream: ${response.statusText}`);
       const blob = await response.blob();
 
       // 3. Save to Browser Cache API (for offline play within the web app)

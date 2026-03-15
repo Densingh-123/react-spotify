@@ -7,6 +7,7 @@ import { PlayerProvider } from './context/PlayerContext';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import MiniPlayer from './components/ui/MiniPlayer';
+import AnimatedBackground from './components/AnimatedBackground';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -59,6 +60,7 @@ function AppLayout() {
 
   return (
     <div className="app-root">
+      <AnimatedBackground />
       {user && <Sidebar />}
       <div className="main-content">
         <div className="page-area">

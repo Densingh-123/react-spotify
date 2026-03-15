@@ -110,9 +110,9 @@ export default function HomePage() {
           <button className="icon-btn" onClick={() => { setTempLangs(preferences?.languages || []); setLangModalVisible(true); }} style={{ background: 'rgba(255,255,255,0.07)', color: colors.text }}>
             <IoGlobeOutline size={20} />
           </button>
-          <button className="icon-btn" onClick={() => navigate('/settings')} style={{ background: 'rgba(255,255,255,0.07)', color: colors.text }}>
+          {/* <button className="icon-btn" onClick={() => navigate('/settings')} style={{ background: 'rgba(255,255,255,0.07)', color: colors.text }}>
             <IoNotificationsOutline size={20} />
-          </button>
+          </button> */}
           <button className="icon-btn" onClick={() => navigate('/settings')} style={{ background: 'rgba(255,255,255,0.07)', color: colors.text }}>
             <IoSettingsOutline size={20} />
           </button>

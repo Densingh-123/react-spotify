@@ -50,7 +50,7 @@ export default function SettingsPage() {
     {
       title: 'Personalization',
       items: [
-        { icon: IoColorPalette, label: 'Themes', sub: '40 themes available', action: () => nav('/themes') },
+        { icon: IoColorPalette, label: 'Themes', sub: '80 themes available', action: () => nav('/themes') },
         { icon: IoMusicalNotes, label: 'Audio Quality', sub: 'High quality streaming', action: () => {} },
       ]
     },
