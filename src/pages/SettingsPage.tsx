@@ -34,7 +34,7 @@ export default function SettingsPage() {
     {
       title: 'Account',
       items: [
-        { icon: IoPerson, label: 'Profile', sub: user?.email || 'Not logged in', action: () => {} },
+        { icon: IoPerson, label: 'Profile', sub: user?.email || 'Not logged in', action: () => { } },
         { icon: IoLogOut, label: 'Sign Out', sub: 'See you next time!', action: handleSignOut, danger: true },
       ]
     },
@@ -50,16 +50,16 @@ export default function SettingsPage() {
     {
       title: 'Personalization',
       items: [
-        { icon: IoColorPalette, label: 'Themes', sub: '80 themes available', action: () => nav('/themes') },
-        { icon: IoMusicalNotes, label: 'Audio Quality', sub: 'High quality streaming', action: () => {} },
+        { icon: IoColorPalette, label: 'Themes', sub: '100 themes available', action: () => nav('/themes') },
+        { icon: IoMusicalNotes, label: 'Audio Quality', sub: 'High quality streaming', action: () => { } },
       ]
     },
     {
       title: 'Support & Info',
       items: [
         { icon: IoHelpCircle, label: 'Support Chat', sub: 'AI-powered help', action: () => nav('/support') },
-        { icon: IoLockClosed, label: 'Privacy Policy', sub: 'How we protect your data', action: () => {} },
-        { icon: IoInformationCircle, label: 'About Melodify', sub: 'Version 1.0.0', action: () => {} },
+        { icon: IoLockClosed, label: 'Privacy Policy', sub: 'How we protect your data', action: () => { } },
+        { icon: IoInformationCircle, label: 'About Melodify', sub: 'Version 1.0.0', action: () => { } },
       ]
     },
   ];

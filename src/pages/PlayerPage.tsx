@@ -12,7 +12,7 @@ import EqualizerModal from '@/components/EqualizerModal';
 export default function PlayerPage() {
   const { colors } = useTheme();
   const navigate = useNavigate();
-  const { currentTrack, queue, currentIndex, isPlaying, position, duration, repeatMode, setRepeat, playTrack, togglePlay, skipNext, skipPrev, isShuffled, toggleShuffle, setSleepTimer, seekTo, jumpToQueueIndex } = usePlayer();
+  const { currentTrack, queue, currentIndex, isPlaying, position, duration, repeatMode, setRepeat, playTrack, togglePlay, skipNext, skipPrev, isShuffled, toggleShuffle, setSleepTimer, sleepTimerEnd, seekTo, jumpToQueueIndex } = usePlayer();
   const { isLiked, toggleLike } = useLikes();
   const { downloadedSongs, downloadSong, removeDownloadRecord, isDownloaded } = useDownloads();
 
@@ -22,11 +22,32 @@ export default function PlayerPage() {
   const [seekValue, setSeekValue] = useState(0);
   const progressRef = useRef<HTMLDivElement>(null);
   const lyricsRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'lyrics' | 'queue'>('lyrics');
+  const [activeTab, setActiveTab] = useState<'lyrics' | 'queue'>('queue');
   const [pickerVisible, setPickerVisible] = useState(false);
   const [eqVisible, setEqVisible] = useState(false);
   const [timerVisible, setTimerVisible] = useState(false);
   const [timerMinutes, setTimerMinutes] = useState('15');
+  const [timeLeftStr, setTimeLeftStr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!sleepTimerEnd) {
+      setTimeLeftStr(null);
+      return;
+    }
+    const updateTime = () => {
+      const diff = sleepTimerEnd - Date.now();
+      if (diff <= 0) {
+        setTimeLeftStr(null);
+      } else {
+        const m = Math.floor(diff / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        setTimeLeftStr(`${m}:${s < 10 ? '0' : ''}${s}`);
+      }
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, [sleepTimerEnd]);
 
   const progressPercent = duration > 0 ? Math.min(1, Math.max(0, position / duration)) : 0;
   const displayPercent = isSeeking ? seekValue : progressPercent;
@@ -191,7 +212,10 @@ export default function PlayerPage() {
           <IoRepeat size={26} />
           {repeatMode === 'track' && <span style={{ position: 'absolute', fontSize: 8, bottom: 2, fontWeight: 900 }}>1</span>}
         </button>
-        <button className="icon-btn" onClick={() => setTimerVisible(true)} style={{ color: colors.textSecondary, paddingTop: 4 }}><IoMoon size={24} /></button>
+        <button className="icon-btn" onClick={() => setTimerVisible(true)} style={{ color: sleepTimerEnd ? colors.primary : colors.textSecondary, paddingTop: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <IoMoon size={24} />
+          {timeLeftStr && <span style={{ fontSize: 10, color: colors.primary, marginTop: 2, fontWeight: 'bold' }}>{timeLeftStr}</span>}
+        </button>
       </div>
 
       {/* Tab Switcher */}

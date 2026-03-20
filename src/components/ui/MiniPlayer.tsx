@@ -1,13 +1,14 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { IoPlay, IoPause, IoPlaySkipForward, IoClose } from 'react-icons/io5';
 import { usePlayer } from '@/context/PlayerContext';
 
 export default function MiniPlayer() {
   const { currentTrack, isPlaying, position, duration, togglePlay, skipNext, reset } = usePlayer();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  if (!currentTrack) return null;
+  if (!currentTrack || location.pathname === '/player') return null;
 
   const progress = duration > 0 ? (position / duration) * 100 : 0;
 

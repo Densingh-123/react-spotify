@@ -4,14 +4,13 @@ import { IoChevronBack, IoCheckmarkCircle } from 'react-icons/io5';
 import { useTheme, ThemeMode, themes } from '@/context/ThemeContext';
 
 const THEME_GROUPS = [
-  { title: ' Dark Themes', keys: ['black','midnight','amoled','galaxy','ocean','forest','sunset','volcano','neon','cyberpunk','deep_blue','deep_purple','deep_red','deep_teal','deep_orange','matrix','dracula','nord_dark','synthwave','obsidian','charcoal','espresso','blood_moon','toxic', 'electric','royal_dark','emerald_dark','ruby','sapphire','twilight'] },
-  { title: ' Light Themes', keys: ['white','snow','sky','mint','rose','lemon','peach','lavender','sakura','nord_light'] },
+  { title: ' Dark Themes', keys: ['black', 'midnight', 'amoled'] },
+  { title: ' Light Themes', keys: ['white', 'snow'] },
   { title: ' Animated: Space', keys: ['twinkling_stars', 'galaxy_spiral', 'shooting_stars', 'nebula_clouds', 'floating_planets', 'asteroid_field', 'black_hole', 'constellation'] },
   { title: ' Animated: Water', keys: ['ocean_waves', 'underwater_bubbles', 'sea_shore', 'coral_reef', 'deep_sea_glow', 'water_ripple', 'rain_on_water', 'floating_boats'] },
   { title: ' Animated: Nature', keys: ['floating_leaves', 'cherry_blossom', 'moving_clouds', 'forest_fireflies', 'snowfall', 'butterflies', 'grass_sway', 'sunrise_gradient'] },
   { title: ' Animated: Abstract', keys: ['glass_orbs', 'liquid_gradient', 'neon_lines', 'particle_network', 'floating_cubes', 'colorful_smoke', 'energy_waves', 'aurora_borealis'] },
-  { title: ' Animated: Tech', keys: ['digital_matrix', 'circuit_glow', 'ai_network', 'holographic_grid', 'data_stream', 'radar_scan'] },
-  { title: ' Animated: Creative', keys: ['floating_balloons', 'paper_planes', 'fireplace_glow'] },
+  { title: '🚗 Animated: Street & Travel', keys: ['highway_sunset','bus_window_rain','train_window','metro_ride','bike_ride_pov','auto_rickshaw','plane_takeoff','neon_taxi','terrace_friends','road_trip_friends','beach_bonfire','rain_walk','sunset_silhouette','street_food','city_timelapse','rain_reflection','street_musician','empty_night_road','window_thinking','train_goodbye','train_bridge','lonely_walk','city_top_view','bus_stop_rain','fog_street','festival_lights','ferris_wheel','slow_traffic','boat_ride','lofi_window','neon_alley','subway_rush','delivery_ride','market_crowd','college_walk','rooftop_party','street_dogs','zebra_crossing','truck_night','sunrise_city'] },
 ];
 
 const DISPLAY_NAMES: Record<string, string> = {
@@ -30,7 +29,9 @@ const DISPLAY_NAMES: Record<string, string> = {
   glass_orbs: 'Glass Orbs', liquid_gradient: 'Liquid Gradient', neon_lines: 'Neon Lines', particle_network: 'Particle Network', floating_cubes: 'Floating Cubes', colorful_smoke: 'Colorful Smoke', energy_waves: 'Energy Waves', aurora_borealis: 'Aurora Borealis',
   digital_matrix: 'Digital Matrix', circuit_glow: 'Circuit Board', ai_network: 'Neural Network', holographic_grid: 'Holographic Grid', data_stream: 'Data Stream', radar_scan: 'Radar Scan',
   floating_balloons: 'Floating Balloons', paper_planes: 'Paper Planes', fireplace_glow: 'Fireplace Glow',
+  highway_sunset:'Highway Sunset', bus_window_rain:'Bus Window Rain', train_window:'Train Window', metro_ride:'Metro Ride', bike_ride_pov:'Bike Ride POV', auto_rickshaw:'Auto Rickshaw', plane_takeoff:'Plane Takeoff', neon_taxi:'Neon Taxi', terrace_friends:'Terrace Friends', road_trip_friends:'Road Trip Friends', beach_bonfire:'Beach Bonfire', rain_walk:'Rain Walk', sunset_silhouette:'Sunset Silhouette', street_food:'Street Food', city_timelapse:'City Timelapse', rain_reflection:'Rain Reflection', street_musician:'Street Musician', empty_night_road:'Empty Night Road', window_thinking:'Window Thinking', train_goodbye:'Train Goodbye', train_bridge:'Train Bridge', lonely_walk:'Lonely Walk', city_top_view:'City Top View', bus_stop_rain:'Bus Stop Rain', fog_street:'Fog Street', festival_lights:'Festival Lights', ferris_wheel:'Ferris Wheel', slow_traffic:'Slow Traffic', boat_ride:'Boat Ride', lofi_window:'Lo-Fi Window', neon_alley:'Neon Alley', subway_rush:'Subway Rush', delivery_ride:'Delivery Ride', market_crowd:'Market Crowd', college_walk:'College Walk', rooftop_party:'Rooftop Party', street_dogs:'Street Dogs', zebra_crossing:'Zebra Crossing', truck_night:'Truck Night', sunrise_city:'Sunrise City',
 };
+
 
 export default function ThemesPage() {
   const nav = useNavigate();

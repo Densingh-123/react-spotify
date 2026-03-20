@@ -36,27 +36,17 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } }
 });
 
+import CinematicLoader from './components/ui/CinematicLoader';
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
-  if (isLoading) return (
-    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="spinner" style={{ width: 36, height: 36 }} />
-    </div>
-  );
+  if (isLoading) return <CinematicLoader />;
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function AppLayout() {
   const { user, isLoading } = useAuth();
-  if (isLoading) return (
-    <div className="app-root" style={{ alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🎵</div>
-        <div className="spinner" style={{ width: 36, height: 36, margin: '0 auto' }} />
-        <p style={{ color: 'var(--color-text-secondary)', marginTop: 16 }}>Loading Melodify...</p>
-      </div>
-    </div>
-  );
+  if (isLoading) return <CinematicLoader />;
 
   return (
     <div className="app-root">

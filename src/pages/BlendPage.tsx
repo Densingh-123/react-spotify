@@ -51,8 +51,9 @@ export default function BlendPage() {
         if (partnerId && partnerId !== user.uid) {
           // Get partner name
           const pDoc = await getDoc(doc(db, 'users', partnerId));
-          if (pDoc.exists()) setPartnerUsername(pDoc.data().username || 'Friend');
-          else setPartnerUsername('Friend');
+          const pData = pDoc.exists() ? pDoc.data() : {};
+          const pName = (pData.email ? pData.email.split('@')[0] : null) || pData.displayName || pData.username || 'Friend';
+          setPartnerUsername(pName);
 
           const pQ = query(collection(db, 'users', partnerId, 'likedSongs'));
           const pSnap = await getDocs(pQ);
@@ -60,6 +61,10 @@ export default function BlendPage() {
           setPartnerSongs(pLikes);
 
           calculateBlend(myLikes, pLikes);
+        } else if (partnerId === user.uid) {
+          // User opened their own link
+          setPartnerUsername('(Your Link)');
+          calculateBlend(myLikes, myLikes);
         } else {
           setLoading(false);
         }
@@ -80,16 +85,17 @@ export default function BlendPage() {
       return;
     }
 
-    // Simple Vibe Check algorithm based on Artist overlap
-    const myArtists = new Set(mine.map(s => s.artist));
-    const theirArtists = new Set(theirs.map(s => s.artist));
-    let intersection = 0;
-    myArtists.forEach(a => { if (theirArtists.has(a)) intersection++; });
+    const theirIds = new Set(theirs.map(s => s.id));
+    const commonSongs = mine.filter(s => theirIds.has(s.id));
     
-    // Calculate percentage (0-100) based on max possible overlap
-    const maxUnique = Math.max(1, myArtists.size + theirArtists.size - intersection);
-    const percentage = Math.round((intersection / maxUnique) * 100) + 15; // Base bump
-    setVibeMatch(Math.min(100, percentage));
+    const uniqueCount = mine.length + theirs.length - commonSongs.length;
+    let percentage = uniqueCount === 0 ? 0 : Math.round((commonSongs.length / uniqueCount) * 100);
+    
+    // Base bump if at least one overlap
+    if (commonSongs.length > 0 && percentage < 15) {
+      percentage += 15;
+    }
+    setVibeMatch(Math.min(100, Math.max(0, percentage)));
 
     const blended: SongItem[] = [];
     let i = 0, j = 0;

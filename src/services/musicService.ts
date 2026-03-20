@@ -30,6 +30,7 @@ class MusicPlayerServiceClass {
   private _repeatMode: 'off' | 'track' | 'queue' = 'off';
   private _isShuffled = false;
   private _sleepTimer: any = null;
+  private _sleepTimerEnd: number | null = null;
 
   constructor() {
     this.audio.crossOrigin = 'anonymous'; // Required for Web Audio API with external URLs
@@ -37,7 +38,6 @@ class MusicPlayerServiceClass {
       const now = this.audio.currentTime;
       if (this._state === 'playing') {
         const delta = now - this._position;
-        // Only track small forward deltas (normal playback), not huge seeks
         if (delta > 0 && delta < 2) {
            trackListeningTime(delta, { artist: this.currentTrack?.artist });
         }
@@ -55,6 +55,8 @@ class MusicPlayerServiceClass {
       if (this._state === 'loading') { this._state = 'paused'; this.notify(); }
     });
   }
+
+  get sleepTimerEnd() { return this._sleepTimerEnd; }
 
   private notify() { this._listeners.forEach(l => l()); }
 
@@ -74,6 +76,12 @@ class MusicPlayerServiceClass {
   get isShuffled() { return this._isShuffled; }
 
   async playTrack(track: SongItem, queue?: SongItem[], index?: number) {
+    // Ensure Web Audio API is initialized upon user interaction block
+    this.initAudioContext();
+    if (this.audioContext?.state === 'suspended') {
+      try { await this.audioContext.resume(); } catch(e){}
+    }
+    
     const newQueue = (queue || [track]).map(s => ({ ...s }));
     this._originalQueue = [...newQueue];
     
@@ -138,6 +146,10 @@ class MusicPlayerServiceClass {
     this.audio.src = url;
     this.audio.load();
     try {
+      this.initAudioContext();
+      if (this.audioContext?.state === 'suspended') {
+         await this.audioContext.resume();
+      }
       await this.audio.play();
       this.trackRecentlyPlayed(track);
     } catch (e) {
@@ -146,7 +158,6 @@ class MusicPlayerServiceClass {
       this.notify();
     }
   }
-
 
   pause() { this.audio.pause(); }
 
@@ -229,11 +240,22 @@ class MusicPlayerServiceClass {
 
   setSleepTimer(minutes: number) {
     if (this._sleepTimer) clearTimeout(this._sleepTimer);
-    if (minutes <= 0) return;
+    this._sleepTimerEnd = null;
+    
+    if (minutes <= 0) {
+      this.notify();
+      return;
+    }
+    
+    const waitTime = minutes * 60 * 1000;
+    this._sleepTimerEnd = Date.now() + waitTime;
+    
     this._sleepTimer = setTimeout(() => {
       this.pause();
+      this._sleepTimerEnd = null;
       console.log('Sleep timer elapsed. Playback paused.');
-    }, minutes * 60 * 1000);
+      this.notify();
+    }, waitTime);
     this.notify();
   }
 

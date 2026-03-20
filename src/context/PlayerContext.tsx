@@ -26,6 +26,7 @@ interface PlayerContextType {
   isShuffled: boolean;
   toggleShuffle: () => void;
   setSleepTimer: (minutes: number) => void;
+  sleepTimerEnd: number | null;
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
@@ -66,6 +67,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       isShuffled: MusicPlayerService.isShuffled,
       toggleShuffle: () => MusicPlayerService.toggleShuffle(),
       setSleepTimer: (m) => MusicPlayerService.setSleepTimer(m),
+      sleepTimerEnd: MusicPlayerService.sleepTimerEnd,
     }}>
       {children}
     </PlayerContext.Provider>

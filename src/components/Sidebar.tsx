@@ -23,7 +23,7 @@ export default function Sidebar() {
     <div className="sidebar">
       <div className="sidebar-logo" onClick={() => navigate('/')}>
         <div className="sidebar-logo-icon">
-          <IoMusicalNotes size={22} color="var(--color-primary)" />
+          <img src="/logo.png" alt="Melodify" style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover' }} />
         </div>
         <span className="sidebar-brand" style={{ color: 'var(--color-text)' }}>Melodify</span>
       </div>

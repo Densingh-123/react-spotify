@@ -58,7 +58,7 @@ export default function LoginPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 20px', boxShadow: `0 8px 24px ${colors.primary}55`,
           }}>
-            <IoMusicalNotes size={38} color="#fff" />
+            <img src="/logo.png" alt="Melodify" style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover' }} />
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 800, color: colors.text, marginBottom: 6 }}>Welcome Back</h1>
           <p style={{ fontSize: 14, color: colors.textSecondary }}>Login to continue your musical journey</p>
