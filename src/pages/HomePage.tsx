@@ -74,11 +74,15 @@ export default function HomePage() {
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [tempLangs, setTempLangs] = useState<string[]>(preferences?.languages || []);
 
-  const featured = trending?.slice(0, 3) || [];
-  const topCharts = trending?.slice(3, 11) || [];
-  const topAlbums = trending?.slice(11, 20) || [];
-  const topArtists = trending?.slice(20, 28) || [];
-  const trendingNow = trending?.slice(28) || [];
+  const featured = trending?.slice(0, 5) || [];
+  const topCharts = trending?.slice(5, 15) || [];
+  const topAlbums = trending?.slice(15, 25) || [];
+  
+  // Extract unique diverse artists from the entire 100-song randomized feed
+  const uniqueArtists = Array.from(new Map((trending || []).map(item => [item.artist, item])).values());
+  const topArtists = uniqueArtists.slice(0, 20);
+  
+  const trendingNow = trending?.slice(25, 60) || [];
 
   const handlePlay = async (track: SongItem, list: SongItem[]) => {
     if (!user) { navigate('/login'); return; }

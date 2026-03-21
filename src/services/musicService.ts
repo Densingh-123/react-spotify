@@ -31,6 +31,13 @@ class MusicPlayerServiceClass {
   private _isShuffled = false;
   private _sleepTimer: any = null;
   private _sleepTimerEnd: number | null = null;
+  private _userLanguages: string[] = ['Tamil'];
+
+  setUserLanguages(langs: string[]) {
+    if (langs && langs.length > 0) {
+      this._userLanguages = langs;
+    }
+  }
 
   constructor() {
     this.audio.crossOrigin = 'anonymous'; // Required for Web Audio API with external URLs
@@ -107,6 +114,19 @@ class MusicPlayerServiceClass {
     }
     
     await this.loadAndPlay(this._queue[this._currentIndex]);
+
+    // Auto-expand Up Next queue if it is short
+    if (this._queue.length < 50 && track) {
+      getRecommendedSongs(track, this._userLanguages, 100).then(recos => {
+        const existingIds = new Set(this._queue.map(s => s.id));
+        const freshRecos = recos.filter(s => !existingIds.has(s.id));
+        if (freshRecos.length > 0) {
+          this._queue = [...this._queue, ...freshRecos];
+          this._originalQueue = [...this._queue];
+          this.notify();
+        }
+      }).catch(e => console.log('Queue expansion failed', e));
+    }
   }
 
   private async loadAndPlay(track: PlayerTrack) {

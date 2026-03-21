@@ -254,7 +254,7 @@ export default function LibraryPage() {
               </button>
             </div>
             <p style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 16 }}>
-              {modalType === 'Playlists' ? 'Give your playlist a name.' : `Type a name (e.g. "Love", "Vijay") and we'll find 25 tracks in your preferred languages.`}
+              {modalType === 'Playlists' ? 'Give your playlist a name.' : `Type a name (e.g. "Love", "Vijay") and we'll find 100 tracks in your preferred languages.`}
             </p>
             <input
               className="input-field"
