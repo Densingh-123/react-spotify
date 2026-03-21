@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoMusicalNotes, IoNotificationsOutline, IoSettingsOutline, IoChevronForward, IoEllipsisHorizontal, IoLockClosed, IoFlame, IoGlobeOutline, IoCheckmarkCircle } from 'react-icons/io5';
+import { IoMusicalNotes, IoNotificationsOutline, IoSettingsOutline, IoChevronForward, IoEllipsisHorizontal, IoLockClosed, IoFlame, IoGlobeOutline, IoCheckmarkCircle, IoHandRight } from 'react-icons/io5';
 import { useTrendingMusic } from '@/hooks/useMusicData';
 import { useRecentlyPlayed } from '@/hooks/useRecentlyPlayed';
 import { useAuth } from '@/context/AuthContext';
@@ -46,12 +46,27 @@ function getGreeting() {
   return 'Good evening';
 }
 
+// Strip numbers and @domain from email, returns clean first name
+function getCleanName(user: { displayName?: string | null; email?: string | null } | null): string {
+  if (!user) return '';
+  if (user.displayName) {
+    // Use display name, take first word, strip any numbers
+    return user.displayName.split(' ')[0].replace(/[0-9]/g, '');
+  }
+  if (user.email) {
+    // email → remove @domain → remove numbers → title case
+    const local = user.email.split('@')[0].replace(/[0-9]/g, '') || 'Friend';
+    return local.charAt(0).toUpperCase() + local.slice(1).toLowerCase();
+  }
+  return 'Friend';
+}
+
 export default function HomePage() {
   const { colors } = useTheme();
   const navigate = useNavigate();
   const { user, preferences, prefLoading, updateLanguages } = useAuth();
   const { playTrack } = usePlayer();
-  const { data: trending, isLoading, refetch } = useTrendingMusic(preferences?.languages);
+  const { data: trending, isLoading, refetch } = useTrendingMusic(preferences?.languages?.length ? preferences.languages : ['English', 'Tamil', 'Hindi']);
   const { recentlyPlayed } = useRecentlyPlayed(12);
   const [selectedSong, setSelectedSong] = useState<SongItem | null>(null);
   const [optionsVisible, setOptionsVisible] = useState(false);
@@ -102,7 +117,10 @@ export default function HomePage() {
             <IoMusicalNotes size={26} color={colors.primary} />
           </div>
           <div>
-            <div style={{ fontSize: 12, color: colors.textSecondary, fontWeight: 600 }}>{getGreeting()} 👋</div>
+            <div style={{ fontSize: 12, color: colors.textSecondary, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              {getGreeting()}{user ? `, ${getCleanName(user)}` : ''}
+              <IoHandRight size={13} color={colors.primary} style={{ marginLeft: 2 }} />
+            </div>
             <div style={{ fontSize: 24, fontWeight: 900, color: colors.text, letterSpacing: -0.8 }}>Melodify</div>
           </div>
         </div>

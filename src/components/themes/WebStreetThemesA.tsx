@@ -99,236 +99,221 @@ export const TrainWindow = () => {
   return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />;
 };
 
-// ─── 43. METRO RIDE (daytime elevated commute) ────────────────────────────────────
+// ─── 43. METRO RIDE (distant city — train on elevated tracks) ──────────────────
 export const MetroRide = () => {
-  const state = useRef({ worldX: 0, phase: 'moving', timer: 0, platformWorldOffset: -9999 });
-
+  const trainX = useRef(0);
   const ref = useCanvas((ctx, w, h, t) => {
     ctx.clearRect(0, 0, w, h);
 
-    // --- State Machine ---
-    state.current.timer++;
-    const timer = state.current.timer;
-    let speed = 25; // Base high speed
-    let doorsOpen = 0;
-    let personProgress = -1; // -1 means hidden
+    // ── Sky: dusk gradient ──────────────────────────────────────────────────
+    const sky = ctx.createLinearGradient(0, 0, 0, h * 0.55);
+    sky.addColorStop(0, '#0a0a1a');
+    sky.addColorStop(0.4, '#1a1040');
+    sky.addColorStop(0.7, '#392060');
+    sky.addColorStop(1, '#7c3a8a');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h * 0.55);
 
-    if (state.current.phase === 'moving') {
-      if (timer > 250) { 
-        state.current.phase = 'slowing'; 
-        state.current.timer = 0; 
-        // Distance traveled during slowing = (25 / 2) * 80 frames = 1000
-        state.current.platformWorldOffset = state.current.worldX + 1000 + w/2;
-      }
-    } else if (state.current.phase === 'slowing') {
-      const p = timer / 80;
-      speed = 25 * (1 - p);
-      if (timer > 80) { state.current.phase = 'stopped'; state.current.timer = 0; }
-    } else if (state.current.phase === 'stopped') {
-      speed = 0;
-      if (timer <= 30) {
-        doorsOpen = timer / 30; // opening
-      } else if (timer <= 110) {
-        doorsOpen = 1;
-        // Person walking in (frames 30 to 110 = 80 frames)
-        personProgress = (timer - 30) / 80;
-      } else if (timer <= 140) {
-        doorsOpen = 1 - (timer - 110) / 30; // closing
-      } else if (timer > 160) {
-        state.current.phase = 'accelerating'; state.current.timer = 0;
-      }
-    } else if (state.current.phase === 'accelerating') {
-      const p = timer / 80;
-      speed = 25 * p;
-      if (timer > 80) { state.current.phase = 'moving'; state.current.timer = 0; }
+    // ── Stars ───────────────────────────────────────────────────────────────
+    for (let i = 0; i < 80; i++) {
+      const sx = (Math.sin(i * 89.7) * 0.5 + 0.5) * w;
+      const sy = (Math.cos(i * 137.5) * 0.5 + 0.5) * h * 0.45;
+      const twinkle = 0.4 + Math.sin(t * 0.05 + i) * 0.3;
+      ctx.globalAlpha = twinkle;
+      ctx.beginPath(); ctx.arc(sx, sy, 0.8, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff'; ctx.fill();
     }
+    ctx.globalAlpha = 1;
 
-    state.current.worldX += speed;
-    const wx = state.current.worldX;
+    // ── Moon ────────────────────────────────────────────────────────────────
+    const moonX = w * 0.85, moonY = h * 0.12;
+    const moonG = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 32);
+    moonG.addColorStop(0, '#fef9c3'); moonG.addColorStop(0.6, '#fde68a60'); moonG.addColorStop(1, 'transparent');
+    ctx.fillStyle = moonG; ctx.beginPath(); ctx.arc(moonX, moonY, 32, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fef9c3'; ctx.beginPath(); ctx.arc(moonX, moonY, 18, 0, Math.PI * 2); ctx.fill();
+    // Moon glow
+    const moonGlow = ctx.createRadialGradient(moonX, moonY, 0, moonX, moonY, 80);
+    moonGlow.addColorStop(0, 'rgba(254,249,195,0.15)'); moonGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = moonGlow; ctx.beginPath(); ctx.arc(moonX, moonY, 80, 0, Math.PI * 2); ctx.fill();
 
+    // ── Distant city skyline (very far, small) ──────────────────────────────
+    const cityBuildings = [
+      { x: 0.02, w: 0.04, h: 0.28 }, { x: 0.05, w: 0.03, h: 0.22 },
+      { x: 0.09, w: 0.05, h: 0.35 }, { x: 0.14, w: 0.03, h: 0.18 },
+      { x: 0.18, w: 0.06, h: 0.30 }, { x: 0.25, w: 0.04, h: 0.42 }, // Tallest tower
+      { x: 0.30, w: 0.03, h: 0.26 }, { x: 0.34, w: 0.05, h: 0.32 },
+      { x: 0.40, w: 0.03, h: 0.20 }, { x: 0.44, w: 0.07, h: 0.38 },
+      { x: 0.52, w: 0.04, h: 0.29 }, { x: 0.57, w: 0.03, h: 0.22 },
+      { x: 0.61, w: 0.06, h: 0.36 }, { x: 0.67, w: 0.04, h: 0.44 }, // Tallest tower 2
+      { x: 0.72, w: 0.03, h: 0.26 }, { x: 0.76, w: 0.05, h: 0.30 },
+      { x: 0.82, w: 0.04, h: 0.24 }, { x: 0.87, w: 0.06, h: 0.34 },
+      { x: 0.94, w: 0.04, h: 0.20 }, { x: 0.98, w: 0.03, h: 0.28 },
+    ];
 
-    // --- Layer 1: Sky & Sun ---
-    const sky = ctx.createLinearGradient(0, 0, 0, h * 0.6);
-    sky.addColorStop(0, '#38bdf8'); sky.addColorStop(1, '#e0f2fe');
-    ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
-    
-    // Sun
-    const sunG = ctx.createRadialGradient(w * 0.8, h * 0.2, 0, w * 0.8, h * 0.2, 80);
-    sunG.addColorStop(0, '#fef08a'); sunG.addColorStop(1, 'transparent');
-    ctx.fillStyle = sunG; ctx.beginPath(); ctx.arc(w * 0.8, h * 0.2, 80, 0, Math.PI*2); ctx.fill();
+    const horizonY = h * 0.55;
+    cityBuildings.forEach(b => {
+      const bx = b.x * w;
+      const bw = b.w * w;
+      const bh = b.h * h;
+      const by = horizonY - bh;
 
-    // Clouds
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    [[0.2, 0.15, 60], [0.6, 0.25, 80], [0.85, 0.1, 50]].forEach(([cx, cy, cw], i) => {
-       const clx = ((cx * w - t * 0.2 * (i+1)) % (w + 200) + w + 200) % (w + 200) - 100;
-       ctx.beginPath(); ctx.ellipse(clx, cy * h, cw, cw*0.35, 0, 0, Math.PI*2); ctx.fill();
+      // Building silhouette (dark blue-purple)
+      ctx.fillStyle = '#1a1535';
+      ctx.fillRect(bx, by, bw, bh);
+
+      // Glowing windows (small dots scattered)
+      for (let wy = by + 6; wy < horizonY - 4; wy += 9) {
+        for (let wx2 = bx + 3; wx2 < bx + bw - 3; wx2 += 7) {
+          if (Math.sin(wx2 * 0.8 + wy * 0.5) > 0.1) {
+            const winFlicker = Math.sin(t * 0.03 + wx2 + wy) > 0.8 ? 0.2 : 1; // rare flicker
+            ctx.globalAlpha = 0.7 * winFlicker;
+            ctx.fillStyle = Math.sin(wx2 + wy) > 0.3 ? '#fbbf24' : '#93c5fd';
+            ctx.fillRect(wx2, wy, 2, 4);
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // Antenna / spire on tall buildings
+      if (b.h > 0.35) {
+        ctx.fillStyle = '#2d2050';
+        ctx.fillRect(bx + bw / 2 - 1, by - h * 0.04, 2, h * 0.04);
+        // Blinking antenna light
+        const blink = Math.sin(t * 0.08) > 0;
+        if (blink) {
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath(); ctx.arc(bx + bw / 2, by - h * 0.04, 2.5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
     });
 
-    // --- Layer 2: Distant City (Layer 1) ---
-    ctx.fillStyle = '#bae6fd';
-    for (let i = -1; i < w / 100 + 2; i++) {
-       const bx = ((i * 100 - wx * 0.05) % (w + 100) + w + 100) % (w + 100) - 100;
-       const bidx = Math.floor((i * 100 - wx * 0.05) / 100);
-       const bh = h * (0.3 + Math.abs(Math.sin(bidx * 79)) * 0.3);
-       ctx.fillRect(bx, h * 0.6 - bh, 80, bh);
+    // City ambient glow (orange/purple haze at horizon)
+    const cityGlow = ctx.createLinearGradient(0, horizonY - 60, 0, horizonY);
+    cityGlow.addColorStop(0, 'transparent');
+    cityGlow.addColorStop(1, 'rgba(124,58,138,0.35)');
+    ctx.fillStyle = cityGlow; ctx.fillRect(0, horizonY - 60, w, 60);
+
+    // ── Ground / River ──────────────────────────────────────────────────────
+    const ground = ctx.createLinearGradient(0, horizonY, 0, h);
+    ground.addColorStop(0, '#0d0d0d'); ground.addColorStop(1, '#050505');
+    ctx.fillStyle = ground; ctx.fillRect(0, horizonY, w, h - horizonY);
+
+    // River reflection
+    const riverY = horizonY + (h - horizonY) * 0.65;
+    ctx.fillStyle = '#0c1a2e';
+    ctx.beginPath(); ctx.ellipse(w * 0.5, riverY, w * 0.45, (h - horizonY) * 0.12, 0, 0, Math.PI * 2); ctx.fill();
+    // River shimmer
+    for (let rx = w * 0.15; rx < w * 0.85; rx += 18) {
+      const ry2 = riverY + Math.sin(rx * 0.05 + t * 0.04) * 5;
+      ctx.strokeStyle = 'rgba(147,197,253,0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(rx, ry2); ctx.lineTo(rx + 12, ry2 + 2); ctx.stroke();
     }
 
-    // --- Layer 3: Closer City (Layer 2) ---
-    ctx.fillStyle = '#94a3b8';
-    for (let i = -1; i < w / 150 + 2; i++) {
-       const bx = ((i * 150 - wx * 0.15) % (w + 150) + w + 150) % (w + 150) - 150;
-       const bidx = Math.floor((i * 150 - wx * 0.15) / 150);
-       const bh = h * (0.2 + Math.abs(Math.cos(bidx * 137)) * 0.3);
-       ctx.fillRect(bx, h * 0.65 - bh, 120, bh);
-       ctx.fillStyle = '#cbd5e1'; // Windows
-       if (Math.abs(Math.sin(bidx)) > 0.3) {
-           ctx.fillRect(bx + 20, h * 0.65 - bh + 20, 20, 30);
-           ctx.fillRect(bx + 60, h * 0.65 - bh + 20, 20, 30);
-       }
-       ctx.fillStyle = '#94a3b8';
+    // ── Elevated Metro Track ────────────────────────────────────────────────
+    const trackY = h * 0.63; // Track sits between horizon and bottom
+    const pillarH = h - trackY;
+
+    // Pillars (fade into distance using parallax)
+    const pillarSpacing = 90;
+    const pillarOffset = (t * 1.5) % pillarSpacing;
+    for (let i = -1; i < w / pillarSpacing + 2; i++) {
+      const px = i * pillarSpacing - pillarOffset;
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(px - 5, trackY + 8, 10, pillarH); // Pillar
+      ctx.fillRect(px - 18, trackY + 6, 36, 8); // Capital
     }
 
-    // --- Layer 4: Trees & Ground ---
-    ctx.fillStyle = '#166534';
-    ctx.fillRect(0, h * 0.6, w, h * 0.4); // Ground
-    
-    for (let i = -1; i < w / 200 + 2; i++) {
-       const tx_tree = ((i * 200 - wx * 0.4) % (w + 200) + w + 200) % (w + 200) - 200;
-       const tidx = Math.floor((i * 200 - wx * 0.4) / 200);
-       
-       // Trunk
-       ctx.fillStyle = '#78350f';
-       ctx.fillRect(tx_tree + 25, h * 0.5, 10, h * 0.15);
-       
-       // Leaves
-       ctx.fillStyle = Math.sin(tidx) > 0 ? '#15803d' : '#14532d';
-       ctx.beginPath(); ctx.arc(tx_tree + 30, h * 0.45, 40, 0, Math.PI*2); ctx.fill();
-       ctx.beginPath(); ctx.arc(tx_tree + 15, h * 0.48, 30, 0, Math.PI*2); ctx.fill();
-       ctx.beginPath(); ctx.arc(tx_tree + 45, h * 0.48, 30, 0, Math.PI*2); ctx.fill();
-    }
+    // Track bed
+    ctx.fillStyle = '#2a2a3a';
+    ctx.fillRect(0, trackY, w, 8);
+    ctx.fillStyle = '#1a1a28';
+    ctx.fillRect(0, trackY + 8, w, 4);
 
-    // --- Layer 5: Platform ---
-    const pX = state.current.platformWorldOffset - wx;
-    if (pX > -w && pX < w * 2) {
-       const statW = 1200;
-       const sx = pX - statW/2;
-       
-       ctx.fillStyle = '#cbd5e1'; // Concrete platform
-       ctx.fillRect(sx, h * 0.55, statW, h * 0.2);
-       
-       // Yellow warning line
-       ctx.fillStyle = '#eab308';
-       ctx.fillRect(sx, h * 0.72, statW, 8);
-       
-       // Roof/Pillars
-       ctx.fillStyle = '#94a3b8';
-       for(let px_pil = sx + 50; px_pil < sx + statW; px_pil += 300) {
-           ctx.fillRect(px_pil, h * 0.1, 20, h * 0.45);
-       }
-       ctx.fillStyle = '#f1f5f9'; // Roof
-       ctx.fillRect(sx, h * 0.05, statW, h * 0.05);
-       
-       // Station Sign
-       ctx.fillStyle = '#0284c7';
-       ctx.fillRect(sx + statW/2 - 80, h * 0.3, 160, 40);
-       ctx.fillStyle = '#ffffff';
-       ctx.font = `bold ${Math.max(16, h * 0.03)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-       ctx.fillText("CITY CENTER", sx + statW/2, h * 0.3 + 20);
+    // Rails (two parallel lines — silver)
+    [trackY + 2, trackY + 9].forEach(ry => {
+      ctx.beginPath();
+      const railG = ctx.createLinearGradient(0, ry, w, ry + 1);
+      railG.addColorStop(0, '#64748b'); railG.addColorStop(0.5, '#94a3b8'); railG.addColorStop(1, '#64748b');
+      ctx.strokeStyle = railG; ctx.lineWidth = 2;
+      ctx.moveTo(0, ry); ctx.lineTo(w, ry); ctx.stroke();
+    });
 
-       // Boarding Person
-       if (personProgress >= 0) {
-           const depth = personProgress; // 0 to 1
-           const scale = 1 + depth * 0.6;
-           const personDrawX = sx + statW/2;
-           const personDrawY = h * 0.6 + depth * h * 0.1; 
-           
-           ctx.save();
-           ctx.translate(personDrawX, personDrawY);
-           ctx.scale(scale, scale);
-           
-           ctx.fillStyle = '#1e293b'; 
-           const bob_p = Math.sin(depth * Math.PI * 10) * 4;
-           
-           // Head
-           ctx.beginPath(); ctx.arc(0, -50 + bob_p, 12, 0, Math.PI*2); ctx.fill();
-           // Body
-           ctx.fillRect(-15, -35 + bob_p, 30, 45);
-           // Legs
-           const leg1 = Math.sin(depth * Math.PI * 10) * 15;
-           const leg2 = -leg1;
-           ctx.beginPath(); ctx.moveTo(-5, 10 + bob_p); ctx.lineTo(-5 + leg1, 35); ctx.lineWidth = 10; ctx.strokeStyle = '#1e293b'; ctx.stroke();
-           ctx.beginPath(); ctx.moveTo(5, 10 + bob_p); ctx.lineTo(5 + leg2, 35); ctx.stroke();
-           
-           ctx.restore();
-       }
-    }
+    // ── Metro Train (small, distant, running fast) ──────────────────────────
+    const TRAIN_SPEED = 1.8;
+    trainX.current = (trainX.current + TRAIN_SPEED) % (w + 260);
+    const tx = trainX.current - 130; // centered, moves left → right
 
-    // --- Layer 6: The Train ---
-    const bob = speed > 0 ? Math.sin(t * 0.4) * (speed * 0.1) : 0;
-    const ty = h * 0.35 + bob;
-    const th = h * 0.5;
+    const trainW = 180; // Train appears small (distant)
+    const trainH = 24;
+    const tBase = trackY - trainH;
 
-    const doorW = w * 0.2;
-    const doorX = w/2 - doorW/2;
-    
-    // Train interior back wall
-    ctx.fillStyle = '#334155'; ctx.fillRect(doorX, ty + th * 0.2, doorW, th * 0.7);
-    // Interior light strips
-    ctx.fillStyle = '#f8fafc'; ctx.fillRect(doorX, ty + th * 0.25, doorW, 8);
-    // Floor
-    ctx.fillStyle = '#1e293b'; ctx.fillRect(doorX, ty + th * 0.85, doorW, th * 0.05);
+    // Motion blur trail behind train
+    const trailGrad = ctx.createLinearGradient(tx - 60, 0, tx, 0);
+    trailGrad.addColorStop(0, 'transparent');
+    trailGrad.addColorStop(1, 'rgba(100,120,200,0.25)');
+    ctx.fillStyle = trailGrad;
+    ctx.fillRect(tx - 60, tBase, 60, trainH);
 
-    // Train Exterior
-    ctx.fillStyle = '#e2e8f0'; 
-    ctx.fillRect(0, ty, doorX, th); 
-    ctx.fillRect(doorX + doorW, ty, w - (doorX + doorW), th);
-    
-    ctx.fillRect(doorX, ty, doorW, th * 0.2); // Roof edge above door
-    ctx.fillRect(doorX, ty + th * 0.9, doorW, th * 0.1); // Under door
+    // Train body
+    const trainBodyGrad = ctx.createLinearGradient(tx, tBase, tx, tBase + trainH);
+    trainBodyGrad.addColorStop(0, '#e2e8f0');
+    trainBodyGrad.addColorStop(0.5, '#cbd5e1');
+    trainBodyGrad.addColorStop(1, '#94a3b8');
+    ctx.fillStyle = trainBodyGrad;
+    ctx.beginPath();
+    ctx.roundRect?.(tx, tBase, trainW, trainH, 4);
+    ctx.fill?.();
 
     // Blue accent stripe
-    ctx.fillStyle = '#0284c7';
-    ctx.fillRect(0, ty + th * 0.8, w, th * 0.05);
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillRect(tx, tBase + trainH * 0.72, trainW, trainH * 0.12);
 
-    // Continuous dark window band
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, ty + th * 0.2, doorX, th * 0.4);
-    ctx.fillRect(doorX + doorW, ty + th * 0.2, w - (doorX + doorW), th * 0.4);
-
-    // Reflection on exterior windows
-    const windowG = ctx.createLinearGradient(0, ty + th * 0.2, 0, ty + th * 0.6);
-    windowG.addColorStop(0, 'rgba(255,255,255,0.2)'); windowG.addColorStop(1, 'transparent');
-    ctx.fillStyle = windowG;
-    ctx.fillRect(0, ty + th * 0.2, doorX, th * 0.4);
-    ctx.fillRect(doorX + doorW, ty + th * 0.2, w - (doorX + doorW), th * 0.4);
-
-    // The Sliding Doors
-    ctx.fillStyle = '#f1f5f9';
-    const slide = doorsOpen * (doorW * 0.48);
-    ctx.fillRect(doorX - slide, ty + th * 0.2, doorW/2, th * 0.7); // Left
-    ctx.fillRect(doorX + doorW/2 + slide, ty + th * 0.2, doorW/2, th * 0.7); // Right
-    
-    // Door glass
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(doorX - slide + 8, ty + th * 0.25, doorW/2 - 16, th * 0.4);
-    ctx.fillRect(doorX + doorW/2 + slide + 8, ty + th * 0.25, doorW/2 - 16, th * 0.4);
-
-    // --- Layer 7: Foreground Railings / Blur ---
-    const fgSpeed = speed * 1.5;
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, h * 0.9, w, h * 0.1); 
-    
-    if (fgSpeed > 0) {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.4)'; 
-        const fgSpacing = 600;
-        for(let i = 0; i < 4; i++) {
-            const fgX = ((i * fgSpacing - wx * 1.5) % (w + fgSpacing) + w + fgSpacing) % (w + fgSpacing) - fgSpacing;
-            ctx.fillRect(fgX, 0, 40 + fgSpeed * 2.5, h); 
-        }
+    // Windows (small rectangles, lit up warmly)
+    const winColors = ['#fde68a', '#fef3c7', '#fde68a'];
+    for (let wi = 0; wi < 6; wi++) {
+      const wx2 = tx + 12 + wi * 28;
+      ctx.fillStyle = winColors[wi % 3];
+      ctx.globalAlpha = 0.85;
+      ctx.fillRect(wx2, tBase + 4, 16, trainH * 0.5);
     }
+    ctx.globalAlpha = 1;
+
+    // Train nose/front
+    ctx.fillStyle = '#1e40af';
+    ctx.beginPath();
+    ctx.moveTo(tx + trainW, tBase);
+    ctx.lineTo(tx + trainW + 14, tBase + trainH * 0.5);
+    ctx.lineTo(tx + trainW, tBase + trainH);
+    ctx.closePath(); ctx.fill();
+
+    // Headlight glow
+    const hlGlow = ctx.createRadialGradient(tx + trainW + 12, tBase + trainH / 2, 0, tx + trainW + 12, tBase + trainH / 2, 40);
+    hlGlow.addColorStop(0, 'rgba(255,245,200,0.7)'); hlGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = hlGlow;
+    ctx.beginPath(); ctx.arc(tx + trainW + 12, tBase + trainH / 2, 40, 0, Math.PI * 2); ctx.fill();
+
+    // Pantograph (electric pickup arm)
+    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(tx + trainW * 0.3, tBase);
+    ctx.lineTo(tx + trainW * 0.3 + 8, tBase - 14);
+    ctx.lineTo(tx + trainW * 0.5 + 8, tBase - 14); ctx.stroke();
+
+    // Electric spark on overhead wire
+    if (Math.sin(t * 0.5) > 0.7) {
+      ctx.fillStyle = '#60a5fa';
+      ctx.shadowColor = '#3b82f6'; ctx.shadowBlur = 12;
+      ctx.beginPath(); ctx.arc(tx + trainW * 0.5 + 8, tBase - 14, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Overhead wire ───────────────────────────────────────────────────────
+    ctx.strokeStyle = 'rgba(100,116,139,0.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, trackY - 14); ctx.lineTo(w, trackY - 14); ctx.stroke();
   });
   return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />;
 };
+
 
 // ─── 44. BIKE RIDE POV (friends night ride) ───────────────────────────────────
 export const BikeRidePOV = () => {

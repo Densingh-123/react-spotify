@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { IoChevronBack, IoShareSocial, IoPeople, IoPlay, IoClose } from 'react-icons/io5';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { IoChevronBack, IoShareSocial, IoPeople, IoPlay, IoLogIn, IoPersonAdd } from 'react-icons/io5';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/services/firebaseConfig';
-import { collection, query, getDocs, doc, getDoc, setDoc, serverTimestamp, where } from 'firebase/firestore';
+import { collection, query, getDocs, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { SongItem } from '@/services/api';
 import { usePlayer } from '@/context/PlayerContext';
 import SkeletonLoader from '@/components/ui/SkeletonLoader';
@@ -12,6 +12,7 @@ import SkeletonLoader from '@/components/ui/SkeletonLoader';
 export default function BlendPage() {
   const { colors } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { partnerId } = useParams<{ partnerId: string }>();
   const { playTrack } = usePlayer();
@@ -22,6 +23,15 @@ export default function BlendPage() {
   const [partnerSongs, setPartnerSongs] = useState<SongItem[]>([]);
   const [blendPlaylist, setBlendPlaylist] = useState<SongItem[]>([]);
   const [vibeMatch, setVibeMatch] = useState<number | null>(null);
+
+  const returnPath = location.pathname;
+
+  // ── Auth guard: redirect to login so user comes back here after auth ─────────
+  useEffect(() => {
+    if (!user) {
+      navigate(`/login?from=${encodeURIComponent(returnPath)}`, { replace: true });
+    }
+  }, [user, navigate, returnPath]);
 
   // Generate a shareable link
   const shareLink = () => {
@@ -36,20 +46,20 @@ export default function BlendPage() {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const fetchBlendData = async () => {
       setLoading(true);
       try {
-        // Fetch My Songs (using LikedSongs as the base profile for simplicity)
         const myQ = query(collection(db, 'users', user.uid, 'likedSongs'));
         const mySnap = await getDocs(myQ);
         const myLikes = mySnap.docs.map(d => d.data() as SongItem);
         setMySongs(myLikes);
 
-        // If a partner ID is present, fetch their data and calculate blend
         if (partnerId && partnerId !== user.uid) {
-          // Get partner name
           const pDoc = await getDoc(doc(db, 'users', partnerId));
           const pData = pDoc.exists() ? pDoc.data() : {};
           const pName = (pData.email ? pData.email.split('@')[0] : null) || pData.displayName || pData.username || 'Friend';
@@ -62,7 +72,6 @@ export default function BlendPage() {
 
           calculateBlend(myLikes, pLikes);
         } else if (partnerId === user.uid) {
-          // User opened their own link
           setPartnerUsername('(Your Link)');
           calculateBlend(myLikes, myLikes);
         } else {
@@ -80,46 +89,34 @@ export default function BlendPage() {
   const calculateBlend = (mine: SongItem[], theirs: SongItem[]) => {
     if (mine.length === 0 || theirs.length === 0) {
       setVibeMatch(0);
-      setBlendPlaylist([...mine, ...theirs]); // Just combine if someone has no likes
+      setBlendPlaylist([...mine, ...theirs]);
       setLoading(false);
       return;
     }
 
     const theirIds = new Set(theirs.map(s => s.id));
     const commonSongs = mine.filter(s => theirIds.has(s.id));
-    
     const uniqueCount = mine.length + theirs.length - commonSongs.length;
     let percentage = uniqueCount === 0 ? 0 : Math.round((commonSongs.length / uniqueCount) * 100);
-    
-    // Base bump if at least one overlap
-    if (commonSongs.length > 0 && percentage < 15) {
-      percentage += 15;
-    }
+    if (commonSongs.length > 0 && percentage < 15) percentage += 15;
     setVibeMatch(Math.min(100, Math.max(0, percentage)));
 
     const blended: SongItem[] = [];
     let i = 0, j = 0;
     const addedIds = new Set();
     while (i < mine.length || j < theirs.length) {
-      if (i < mine.length && !addedIds.has(mine[i].id)) {
-        blended.push(mine[i]);
-        addedIds.add(mine[i].id);
-      }
-      if (j < theirs.length && !addedIds.has(theirs[j].id)) {
-        blended.push(theirs[j]);
-        addedIds.add(theirs[j].id);
-      }
+      if (i < mine.length && !addedIds.has(mine[i].id)) { blended.push(mine[i]); addedIds.add(mine[i].id); }
+      if (j < theirs.length && !addedIds.has(theirs[j].id)) { blended.push(theirs[j]); addedIds.add(theirs[j].id); }
       i++; j++;
     }
     setBlendPlaylist(blended);
 
-    // Persist the blend to Firestore for history
     if (user && partnerId && partnerId !== user.uid) {
       const blendId = [user.uid, partnerId].sort().join('_');
       setDoc(doc(db, 'blends', blendId), {
         participants: [user.uid, partnerId],
         partnerName: theirs.length > 0 ? (partnerUsername || 'Friend') : 'Friend',
-        songs: blended.slice(0, 30), // Store preview of top 30
+        songs: blended.slice(0, 30),
         vibeMatch: Math.min(100, percentage),
         updatedAt: serverTimestamp()
       }).catch(e => console.error('Failed to persist blend', e));
@@ -133,8 +130,6 @@ export default function BlendPage() {
       playTrack(blendPlaylist[0], blendPlaylist, 0);
     }
   };
-
-  if (!user) return null;
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IoPersonAdd, IoMail, IoLockClosed, IoPerson } from 'react-icons/io5';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -11,6 +11,8 @@ import { useTheme } from '@/context/ThemeContext';
 export default function RegisterPage() {
   const { colors } = useTheme();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromPath = searchParams.get('from') || '/';
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,7 +27,7 @@ export default function RegisterPage() {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
       await setDoc(doc(db, 'users', cred.user.uid), { name, email, createdAt: new Date().toISOString() });
-      navigate('/');
+      navigate(fromPath, { replace: true });
     } catch (err: any) {
       setError(err.code === 'auth/email-already-in-use' ? 'Email already registered. Please login instead.' : err.message);
     } finally { setLoading(false); }
@@ -68,7 +70,7 @@ export default function RegisterPage() {
 
           <p style={{ textAlign: 'center', fontSize: 14, color: colors.textSecondary, marginTop: 12 }}>
             Already have an account?{' '}
-            <span onClick={() => navigate('/login')} style={{ color: colors.primary, fontWeight: 700, cursor: 'pointer' }}>Login</span>
+            <span onClick={() => navigate(`/login?from=${encodeURIComponent(fromPath)}`)} style={{ color: colors.primary, fontWeight: 700, cursor: 'pointer' }}>Login</span>
           </p>
         </form>
       </GlassCard>

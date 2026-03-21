@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { IoClose, IoOptions } from 'react-icons/io5';
 import { useTheme } from '@/context/ThemeContext';
 import { usePlayer } from '@/context/PlayerContext';
@@ -8,17 +8,36 @@ interface Props {
   onClose: () => void;
 }
 
+const EQ_PRESETS: { name: string; icon: string; gains: number[] }[] = [
+  { name: 'Flat',       icon: '⊟', gains: [0,  0,  0,  0,  0,  0,  0,  0,  0,  0] },
+  { name: 'Bass Boost', icon: '🔉', gains: [6,  5,  4,  2,  0,  0,  0,  0,  0,  0] },
+  { name: 'Treble',     icon: '🎶', gains: [0,  0,  0,  0,  0,  2,  3,  4,  5,  6] },
+  { name: 'Vocal',      icon: '🎤', gains: [0,  0,  2,  3,  4,  3,  2,  0, -1, -2] },
+  { name: 'Pop',        icon: '🎵', gains: [-1, 3,  3,  1,  0, -1,  0,  2,  3,  3] },
+  { name: 'Party',      icon: '🎉', gains: [4,  4,  0,  0,  0,  0,  0,  0,  4,  4] },
+];
+
 export default function EqualizerModal({ visible, onClose }: Props) {
   const { colors } = useTheme();
   const { eqBands, getEqGain, setEqGain } = usePlayer();
+  const [activePreset, setActivePreset] = useState<string | null>(null);
 
   if (!visible) return null;
 
+  const applyPreset = (preset: typeof EQ_PRESETS[0]) => {
+    preset.gains.forEach((gain, idx) => setEqGain(idx, gain));
+    setActivePreset(preset.name);
+  };
+
+  // Detect if current gains match a preset
+  const currentGains = eqBands.map((_, i) => getEqGain(i));
+
   return (
     <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 1000 }}>
-      <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: '24px', paddingBottom: '40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="modal-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: '24px', paddingBottom: '40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div className="modal-handle" />
         
+        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <IoOptions size={24} color={colors.primary} />
@@ -29,12 +48,46 @@ export default function EqualizerModal({ visible, onClose }: Props) {
           </button>
         </div>
 
+        {/* Preset Buttons */}
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 700, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 1.5, margin: '0 0 10px' }}>Presets</p>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            {EQ_PRESETS.map(preset => {
+              const isActive = activePreset === preset.name;
+              return (
+                <button
+                  key={preset.name}
+                  onClick={() => applyPreset(preset)}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '8px 14px',
+                    borderRadius: 20,
+                    border: `1.5px solid ${isActive ? colors.primary : colors.glassBorder}`,
+                    background: isActive ? `${colors.primary}22` : 'rgba(255,255,255,0.04)',
+                    color: isActive ? colors.primary : colors.text,
+                    fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    transition: 'all 0.18s',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>{preset.icon}</span>
+                  {preset.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sliders */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', overflowX: 'auto' }}>
           {eqBands.map((freq, index) => {
             const label = freq >= 1000 ? `${freq / 1000}k` : freq.toString();
             return (
               <div key={freq} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, minWidth: 40 }}>
-                <div style={{ fontSize: 11, color: colors.textSecondary, fontWeight: 700 }}>+{Math.round(getEqGain(index))}</div>
+                <div style={{ fontSize: 11, color: colors.textSecondary, fontWeight: 700 }}>
+                  {getEqGain(index) >= 0 ? '+' : ''}{Math.round(getEqGain(index))}
+                </div>
                 
                 <input 
                   type="range"
@@ -42,7 +95,10 @@ export default function EqualizerModal({ visible, onClose }: Props) {
                   max="20"
                   step="1"
                   value={getEqGain(index)}
-                  onChange={(e) => setEqGain(index, parseFloat(e.target.value))}
+                  onChange={(e) => {
+                    setEqGain(index, parseFloat(e.target.value));
+                    setActivePreset(null); // Deselect preset on manual adjust
+                  }}
                   style={{
                     appearance: 'none',
                     width: 140,
@@ -51,7 +107,7 @@ export default function EqualizerModal({ visible, onClose }: Props) {
                     borderRadius: 4,
                     outline: 'none',
                     transform: 'rotate(-90deg)',
-                    margin: '70px -50px', // Hack to fit rotated range inputs nicely
+                    margin: '70px -50px',
                   }}
                   className="eq-slider"
                 />

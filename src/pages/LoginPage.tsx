@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IoMusicalNotes, IoMail, IoLockClosed, IoLogoGoogle } from 'react-icons/io5';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '@/services/firebaseConfig';
@@ -10,6 +10,8 @@ import { useTheme } from '@/context/ThemeContext';
 export default function LoginPage() {
   const { colors } = useTheme();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const fromPath = searchParams.get('from') || '/';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ export default function LoginPage() {
     setLoading(true); setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/');
+      navigate(fromPath, { replace: true });
     } catch (err: any) { setError(err.message); }
     finally { setLoading(false); }
   };
@@ -37,7 +39,7 @@ export default function LoginPage() {
       provider.setCustomParameters({ prompt: 'select_account' });
       console.log('Attempting Google Sign-In with:', { auth, provider });
       await signInWithPopup(auth, provider);
-      navigate('/');
+      navigate(fromPath, { replace: true });
     } catch (err: any) {
       console.error('Google Sign-In Error:', err);
       const m = err.code === 'auth/popup-blocked' ? 'Popup blocked! Please allow popups for this site.'
@@ -95,7 +97,7 @@ export default function LoginPage() {
 
           <p style={{ textAlign: 'center', fontSize: 14, color: colors.textSecondary, marginTop: 12 }}>
             Don't have an account?{' '}
-            <span onClick={() => navigate('/register')} style={{ color: colors.primary, fontWeight: 700, cursor: 'pointer' }}>Register</span>
+            <span onClick={() => navigate(`/register?from=${encodeURIComponent(fromPath)}`)} style={{ color: colors.primary, fontWeight: 700, cursor: 'pointer' }}>Register</span>
           </p>
         </form>
       </GlassCard>
