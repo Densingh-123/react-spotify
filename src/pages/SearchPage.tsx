@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { IoSearch, IoClose, IoPlay, IoEllipsisVertical } from 'react-icons/io5';
-import { useSearchMusic } from '@/hooks/useMusicData';
+import { useSearchMusic, useTrendingMusic } from '@/hooks/useMusicData';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useAuth } from '@/context/AuthContext';
 import { usePlayer } from '@/context/PlayerContext';
@@ -15,7 +15,7 @@ export default function SearchPage() {
   const { colors } = useTheme();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user, preferences } = useAuth();
   const { playTrack } = usePlayer();
 
   const [query, setQuery] = useState(searchParams.get('q') || '');
@@ -26,13 +26,18 @@ export default function SearchPage() {
 
   const debouncedQuery = useDebounce(query, 400);
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useSearchMusic(debouncedQuery);
+  const { data: recommendations, isLoading: recoLoading } = useTrendingMusic(preferences?.languages);
+  
   const results: SongItem[] = data?.pages.flatMap(p => p) || [];
+  const recommendedResults = Array.from(new Map((recommendations || []).map(s => [s.id, s])).values());
 
-  const handlePlay = async (track: SongItem) => {
+  const handlePlay = async (track: SongItem, list?: SongItem[]) => {
     if (!user) { navigate('/login'); return; }
     setPlayingId(track.id);
-    const idx = results.findIndex(s => s.id === track.id);
-    await playTrack(track, results, idx);
+    const queue = list && list.length > 0 ? list : recommendedResults;
+    const deduped = Array.from(new Map(queue.map(s => [s.id, s])).values());
+    const idx = deduped.findIndex(s => s.id === track.id);
+    await playTrack(track, deduped, Math.max(0, idx));
     navigate('/player');
     setPlayingId(null);
   };
@@ -65,11 +70,41 @@ export default function SearchPage() {
         </div>
       )}
 
-      {/* Empty states */}
+      {/* Empty states or Recommended Feed */}
       {!isLoading && query.length === 0 && (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingBottom: 80 }}>
-          <div style={{ fontSize: 64 }}>🔍</div>
-          <p style={{ color: colors.textSecondary, marginTop: 12, fontSize: 16 }}>Search for any song or artist</p>
+        <div style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Recommended for You</h2>
+          {recoLoading ? (
+            Array(6).fill(0).map((_, i) => <SkeletonLoader key={i} height={80} style={{ marginBottom: 12, borderRadius: 16 }} />)
+          ) : (
+            recommendedResults.map((item, index) => (
+              <div
+                key={`reco-${item.id}-${index}`}
+                style={{
+                  height: 80, borderRadius: 16, overflow: 'hidden',
+                  position: 'relative', cursor: 'pointer', marginBottom: 12,
+                }}
+                onClick={() => handlePlay(item, recommendedResults)}
+              >
+                <img src={item.artworkUrl} alt={item.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'linear-gradient(to right, rgba(0,0,0,0.85), rgba(0,0,0,0.5), rgba(0,0,0,0.7))',
+                  display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12,
+                }}>
+                  <span style={{ fontSize: 18, color: colors.primary, flexShrink: 0 }}>✨</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 900, fontSize: 15, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.artist}</div>
+                  </div>
+                  <button style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}
+                    onClick={e => { e.stopPropagation(); setSelectedSong(item); setOptionsVisible(true); }}>
+                    <IoEllipsisVertical size={20} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
       {!isLoading && query.length > 0 && results.length === 0 && (
@@ -89,7 +124,7 @@ export default function SearchPage() {
                 height: 80, borderRadius: 16, overflow: 'hidden',
                 position: 'relative', cursor: 'pointer', marginBottom: 12,
               }}
-              onClick={() => handlePlay(item)}
+              onClick={() => handlePlay(item, results)}
             >
               {/* Background image */}
               <img src={item.artworkUrl} alt={item.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />

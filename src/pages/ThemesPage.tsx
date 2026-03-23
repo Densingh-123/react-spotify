@@ -4,8 +4,6 @@ import { IoChevronBack, IoCheckmarkCircle } from 'react-icons/io5';
 import { useTheme, ThemeMode, themes } from '@/context/ThemeContext';
 
 const THEME_GROUPS = [
-  { title: ' Dark Themes', keys: ['black', 'midnight', 'amoled'] },
-  { title: ' Light Themes', keys: ['white', 'snow'] },
   { title: ' Animated: Space', keys: ['twinkling_stars', 'galaxy_spiral', 'shooting_stars', 'nebula_clouds', 'floating_planets', 'asteroid_field', 'black_hole', 'constellation'] },
   { title: ' Animated: Water', keys: ['ocean_waves', 'underwater_bubbles', 'sea_shore', 'coral_reef', 'deep_sea_glow', 'water_ripple', 'rain_on_water', 'floating_boats'] },
   { title: ' Animated: Nature', keys: ['floating_leaves', 'cherry_blossom', 'moving_clouds', 'forest_fireflies', 'snowfall', 'butterflies', 'grass_sway', 'sunrise_gradient'] },

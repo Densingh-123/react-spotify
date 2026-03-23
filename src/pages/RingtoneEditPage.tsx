@@ -129,7 +129,7 @@ export default function RingtoneEditPage() {
                </div>
                <span style={{ color: colors.text, fontWeight: 800, fontSize: 14 }}>Precision Tuner</span>
              </div>
-             <div style={{ display: 'flex', gap: 12 }}>
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                 <div style={{ background: colors.surface, padding: '4px 12px', borderRadius: 20, fontSize: 12, color: colors.textSecondary, border: `1px solid ${colors.glassBorder}` }}>
                    Seek: {Math.floor(position)}s
                 </div>

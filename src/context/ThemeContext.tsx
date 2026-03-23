@@ -206,6 +206,25 @@ const applyThemeToCssVars = (colors: ThemeColors) => {
   root.style.setProperty('--gradient-end', colors.gradientColors[2] || colors.gradientColors[0]);
 };
 
+const getContrastColor = (hex: string) => {
+  if (!hex) return '#ffffff';
+  if (hex.startsWith('rgba') || hex.startsWith('rgb')) {
+    const coords = hex.match(/\d+/g);
+    if (coords && coords.length >= 3) {
+      const r = parseInt(coords[0], 10), g = parseInt(coords[1], 10), b = parseInt(coords[2], 10);
+      const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+      return yiq >= 128 ? '#111111' : '#ffffff';
+    }
+    return '#ffffff';
+  }
+  let cleanedHex = hex.replace('#', '');
+  if (cleanedHex.length === 3) cleanedHex = cleanedHex.split('').map(c => c + c).join('');
+  if (cleanedHex.length !== 6) return '#ffffff';
+  const r = parseInt(cleanedHex.slice(0, 2), 16), g = parseInt(cleanedHex.slice(2, 4), 16), b = parseInt(cleanedHex.slice(4, 6), 16);
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return yiq >= 128 ? '#111111' : '#ffffff';
+};
+
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [mode, setMode] = useState<ThemeMode>('black');
 
@@ -214,7 +233,16 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (saved && themes[saved]) setMode(saved);
   }, []);
 
-  useEffect(() => { applyThemeToCssVars(themes[mode]); }, [mode]);
+  const rawTheme = themes[mode] || themes['black'];
+  const contrastText = getContrastColor(rawTheme.background);
+  const computedTheme = {
+    ...rawTheme,
+    text: contrastText,
+    textSecondary: contrastText === '#111111' ? '#444444' : '#aaaaaa',
+    isDark: contrastText === '#ffffff'
+  };
+
+  useEffect(() => { applyThemeToCssVars(computedTheme); }, [computedTheme]);
 
   const setThemeMode = (newMode: ThemeMode) => {
     setMode(newMode);
@@ -222,7 +250,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ colors: themes[mode], currentMode: mode, setThemeMode }}>
+    <ThemeContext.Provider value={{ colors: computedTheme, currentMode: mode, setThemeMode }}>
       {children}
     </ThemeContext.Provider>
   );

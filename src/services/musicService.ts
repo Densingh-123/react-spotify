@@ -58,6 +58,14 @@ class MusicPlayerServiceClass {
     this.audio.addEventListener('ended', () => this.handleEnded());
     this.audio.addEventListener('error', () => { this._state = 'error'; this.notify(); });
     this.audio.addEventListener('loadstart', () => { this._state = 'loading'; this.notify(); });
+    this.audio.addEventListener('loadedmetadata', () => {
+      this._duration = this.audio.duration || 0;
+      this.notify();
+    });
+    this.audio.addEventListener('durationchange', () => {
+      this._duration = this.audio.duration || 0;
+      this.notify();
+    });
     this.audio.addEventListener('canplay', () => {
       if (this._state === 'loading') { this._state = 'paused'; this.notify(); }
     });
@@ -89,7 +97,9 @@ class MusicPlayerServiceClass {
       try { await this.audioContext.resume(); } catch(e){}
     }
     
-    const newQueue = (queue || [track]).map(s => ({ ...s }));
+    // Deduplicate the passed queue list by ID to avoid repeated songs
+    const dedupedQueue = Array.from(new Map((queue || [track]).map(s => [s.id, s])).values());
+    const newQueue = dedupedQueue.map(s => ({ ...s }));
     this._originalQueue = [...newQueue];
     
     // If shuffle is active, shuffle the remaining tracks
@@ -300,6 +310,7 @@ class MusicPlayerServiceClass {
         artist: track.artist,
         artworkUrl: track.artworkUrl,
         streamUrl: track.streamUrl || '',
+        duration: track.duration || 0,
         playedAt: serverTimestamp(),
       }, { merge: true });
     } catch (e) {

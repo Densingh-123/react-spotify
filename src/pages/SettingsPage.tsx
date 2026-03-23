@@ -42,6 +42,7 @@ export default function SettingsPage() {
       title: 'Music',
       items: [
         { icon: IoGlobeOutline, label: 'Music Languages', sub: preferences?.languages?.join(', ') || 'English, Tamil', action: () => { setTempLangs(preferences?.languages || []); setLangModalVisible(true); } },
+        { icon: IoMusicalNotes, label: 'Ringtones History', sub: 'Your custom rings', action: () => nav('/ringtones-history') },
         { icon: IoDownload, label: 'Downloads', sub: 'Offline songs', action: () => nav('/downloads') },
         { icon: IoTime, label: 'Recently Played', sub: 'Your history', action: () => nav('/recently-played') },
         { icon: IoHeart, label: 'Liked Songs', sub: 'Your favorites', action: () => nav('/liked') },

@@ -254,41 +254,85 @@ export const StreetFood = () => {
     ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, w, h);
     // Food stalls
     const stalls = [
-      { x: 0.05, label: '🍕 PIZZA', grill: '#ef4444' },
-      { x: 0.25, label: '🍔 BURGER', grill: '#f97316' },
-      { x: 0.48, label: '🍗 CHICKEN', grill: '#d97706' },
-      { x: 0.68, label: '🥟 MOMOS', grill: '#22c55e' },
-      { x: 0.87, label: '🌮 TACOS', grill: '#8b5cf6' },
+      { x: 0.1, label: 'PIZZA', grill: '#ef4444' },
+      { x: 0.3, label: 'BURGER', grill: '#f97316' },
+      { x: 0.5, label: 'CHICKEN', grill: '#d97706' },
+      { x: 0.7, label: 'MOMOS', grill: '#22c55e' },
+      { x: 0.9, label: 'TACOS', grill: '#8b5cf6' },
     ];
     stalls.forEach(st => {
       const sx = st.x * w;
       // Stall canopy
       ctx.fillStyle = st.grill; ctx.fillRect(sx - 60, h * 0.35, 120, 20);
       ctx.fillStyle = '#1e293b'; ctx.fillRect(sx - 55, h * 0.55, 110, h * 0.45);
+      
+      // Warm glow
+      const sg = ctx.createRadialGradient(sx, h * 0.55, 0, sx, h * 0.55, 110);
+      sg.addColorStop(0, st.grill + '66'); sg.addColorStop(1, 'transparent');
+      ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sx, h * 0.55, 110, 0, Math.PI * 2); ctx.fill();
+
       // Counter
       ctx.fillStyle = '#334155'; ctx.fillRect(sx - 55, h * 0.55, 110, 16);
+      
       // Cook silhouette
-      ctx.fillStyle = '#475569';
-      ctx.beginPath(); ctx.arc(sx, h * 0.47, 13, 0, Math.PI * 2); ctx.fill();
-      ctx.fillRect(sx - 10, h * 0.59, 20, 28);
-      // Cook action
-      const stir = Math.sin(t * 0.1 + Math.random()) * 12;
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath(); ctx.arc(sx, h * 0.47, 14, 0, Math.PI * 2); ctx.fill();
+      ctx.fillRect(sx - 12, h * 0.59, 24, 30);
+      const stir = Math.sin(t * 0.1 + sx) * 12;
       ctx.beginPath(); ctx.moveTo(sx, h * 0.62); ctx.lineTo(sx + 18 + stir, h * 0.57);
-      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.strokeStyle = '#475569'; ctx.lineWidth = 4; ctx.stroke();
+      
       // Steam
       for (let si = 0; si < 4; si++) {
         const steamX = sx - 30 + si * 20;
-        const steamY = h * 0.54 - ((t * 0.5 + si * 15) % 50);
-        ctx.beginPath(); ctx.moveTo(steamX, h * 0.54); ctx.bezierCurveTo(steamX + 8, steamY + 15, steamX - 8, steamY + 5, steamX, steamY);
-        ctx.strokeStyle = `rgba(255,255,255,${0.4 - ((t * 0.5 + si * 15) % 50) / 120})`; ctx.lineWidth = 2; ctx.stroke();
+        const phase = (t * 0.5 + si * 25) % 60;
+        const steamY = h * 0.54 - phase;
+        ctx.beginPath(); ctx.moveTo(steamX, h * 0.54); 
+        ctx.bezierCurveTo(steamX + 8, steamY + 15, steamX - 8, steamY + 5, steamX, steamY);
+        ctx.strokeStyle = `rgba(226,232,240,${0.4 - phase / 150})`; 
+        ctx.lineWidth = 3; ctx.stroke();
       }
-      // Stall label
-      ctx.fillStyle = '#fbbf24'; ctx.font = `bold ${w * 0.014}px sans-serif`; ctx.textAlign = 'center';
-      ctx.fillText(st.label, sx, h * 0.38);
-      // Warm glow
-      const sg = ctx.createRadialGradient(sx, h * 0.55, 0, sx, h * 0.55, 90);
-      sg.addColorStop(0, st.grill + '44'); sg.addColorStop(1, 'transparent');
-      ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(sx, h * 0.55, 90, 0, Math.PI * 2); ctx.fill();
+
+      // Cinematic Food Icons
+      ctx.save();
+      ctx.translate(sx, h * 0.46);
+      const scale = 1.2;
+      ctx.scale(scale, scale);
+      
+      if (st.label === 'PIZZA') {
+        ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(15, 15); ctx.lineTo(-15, 15); ctx.fill();
+        ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 2.5; ctx.stroke();
+        ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(-4, 0, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(4, 7, 3.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#84cc16'; ctx.beginPath(); ctx.arc(0, 10, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-15, 15); ctx.lineTo(15, 15); ctx.strokeStyle = '#d97706'; ctx.lineWidth = 4; ctx.stroke();
+      } else if (st.label === 'BURGER') {
+        ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.ellipse(0, -10, 18, 8, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#84cc16'; ctx.fillRect(-17, -2, 34, 4);
+        ctx.fillStyle = '#b45309'; ctx.fillRect(-16, 2, 32, 6);
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(-17, 8, 34, 3);
+        ctx.fillStyle = '#d97706'; ctx.beginPath(); ctx.ellipse(0, 14, 16, 6, 0, 0, Math.PI*2); ctx.fill();
+      } else if (st.label === 'CHICKEN') {
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath(); ctx.moveTo(-15, 15); ctx.quadraticCurveTo(-20, -10, 0, -15); ctx.quadraticCurveTo(20, -5, 15, 15); ctx.quadraticCurveTo(0, 25, -15, 15); ctx.fill();
+        ctx.strokeStyle = '#d97706'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-5, 0); ctx.quadraticCurveTo(0, 5, 5, -2); ctx.stroke();
+        ctx.fillStyle = '#b45309'; ctx.beginPath(); ctx.arc(-8, 5, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, 2, 2, 0, Math.PI*2); ctx.fill();
+      } else if (st.label === 'MOMOS') {
+        [-10, 0, 10].forEach(mx => {
+           ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.ellipse(mx, 5, 8, 6, 0, 0, Math.PI*2); ctx.fill();
+           ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(mx-6, 5); ctx.quadraticCurveTo(mx, -5, mx+6, 5); ctx.stroke();
+        });
+        ctx.fillStyle = '#94a3b8'; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.ellipse(0, 12, 18, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1;
+      } else if (st.label === 'TACOS') {
+        ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.moveTo(-15, -10); ctx.quadraticCurveTo(0, 20, 15, -10); ctx.fill();
+        ctx.strokeStyle = '#d97706'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.fillStyle = '#84cc16'; ctx.beginPath(); ctx.ellipse(0, -8, 12, 4, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#dc2626'; ctx.fillRect(-8, -10, 4, 4); ctx.fillRect(4, -9, 3, 3);
+      }
+      ctx.restore();
+
+      // Signage text
+      ctx.fillStyle = '#fff'; ctx.font = `bold 11px sans-serif`; ctx.textAlign = 'center';
+      ctx.fillText(st.label, sx, h * 0.385);
     });
     // Crowd of customers
     for (let i = 0; i < 20; i++) {
@@ -347,19 +391,35 @@ export const CityTimelapse = () => {
       ctx.beginPath(); ctx.arc(tx, h * 0.44, 18, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 1;
     }
-    // Buildings growing up
+    // Village Houses (fade out as city grows)
+    if (progress < 0.7) {
+      ctx.globalAlpha = Math.max(0, 1 - (progress * 1.5));
+      [[0.15, 0.52, 40], [0.35, 0.56, 45], [0.65, 0.50, 40], [0.85, 0.55, 35]].forEach(([bx, bh, bw], i) => {
+        const hx = bx * w; const hy = h * bh;
+        ctx.fillStyle = '#78350f'; // wood cabin
+        ctx.fillRect(hx - bw/2, hy, bw, h * 0.6 - hy);
+        // Roof
+        ctx.beginPath(); ctx.moveTo(hx - bw/2 - 8, hy); ctx.lineTo(hx + bw/2 + 8, hy); ctx.lineTo(hx, hy - 25); ctx.fillStyle = '#451a03'; ctx.fill();
+        // Warm window
+        if (Math.sin(t * 0.05 + i) > 0) { ctx.fillStyle = 'rgba(251,191,36,0.85)'; ctx.fillRect(hx - 10, hy + 12, 20, 18); }
+      });
+      ctx.globalAlpha = 1;
+    }
+    // Buildings growing up (City encroaches)
     [[0.08,0.72],[0.18,0.65],[0.3,0.78],[0.42,0.6],[0.55,0.55],[0.65,0.7],[0.75,0.62],[0.85,0.75],[0.95,0.68]].forEach(([bx,bh],i) => {
       const finalH = h * (1 - +bh);
-      const currentH = finalH * progress * (0.7 + (i % 3) * 0.15);
-      const bw = 55 + (i % 3) * 20;
-      ctx.fillStyle = '#1e293b'; ctx.fillRect(+bx*w - bw/2, h - currentH, bw, currentH);
-      // Windows
-      const winOp = progress;
-      for(let wi=+bx*w-bw/2+8;wi<+bx*w+bw/2-8;wi+=16) for(let wiy=h-currentH+12;wiy<h-20;wiy+=22) { if(Math.sin(wi*0.2+wiy*0.15+t*0.01)>0&&winOp>0.1) {ctx.fillStyle=`rgba(251,191,36,${winOp*0.5})`;ctx.fillRect(wi,wiy,8,10);} }
+      const currentH = finalH * Math.max(0, progress - 0.2) * 1.25; // Delay city growth slightly
+      if (currentH > 0) {
+        const bw = 55 + (i % 3) * 20;
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(+bx*w - bw/2, h - currentH, bw, currentH);
+        // Windows
+        const winOp = Math.max(0, progress - 0.4);
+        for(let wi=+bx*w-bw/2+8;wi<+bx*w+bw/2-8;wi+=16) for(let wiy=h-currentH+12;wiy<h-20;wiy+=22) { if(Math.sin(wi*0.2+wiy*0.15+t*0.01)>0&&winOp>0.1) {ctx.fillStyle=`rgba(251,191,36,${winOp*0.5})`;ctx.fillRect(wi,wiy,8,10);} }
+      }
     });
     // Roads appearing
     if (progress > 0.4) {
-      ctx.globalAlpha = (progress - 0.4) / 0.6;
+      ctx.globalAlpha = Math.min(1, (progress - 0.4) * 2);
       ctx.fillStyle = '#0f172a'; ctx.fillRect(0, h * 0.78, w, h * 0.06);
       for (let ri = 0; ri < w / 100 + 1; ri++) { const rdx = (ri * 100 - (t * 3) % 100) + 0; ctx.fillStyle = '#fbbf24'; ctx.fillRect(rdx, h * 0.8, 50, 4); }
       ctx.globalAlpha = 1;

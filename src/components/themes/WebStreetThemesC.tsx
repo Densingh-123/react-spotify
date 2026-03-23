@@ -171,42 +171,102 @@ export const DeliveryRide = () => {
 export const StreetDogs = () => {
   const ref = useCanvas((ctx, w, h, t) => {
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#1c1917'; ctx.fillRect(0, 0, w, h);
-    // Alley floor
-    ctx.fillStyle = '#292524'; ctx.fillRect(0, h * 0.6, w, h * 0.4);
-    // Brick walls
-    for (let row = 0; row < 14; row++) for (let col = 0; col < w / 55 + 1; col++) {
-      const bx = col * 55 + (row % 2 ? 27 : 0), by = row * 38;
-      ctx.fillStyle = row % 2 ? '#211711' : '#1a100c'; ctx.fillRect(bx, by, 53, 36); ctx.strokeStyle = '#0d0700'; ctx.lineWidth = 1; ctx.strokeRect(bx, by, 53, 36);
-    }
-    // Distant window warm light
-    ctx.fillStyle = 'rgba(251,191,36,0.25)'; ctx.fillRect(w * 0.7, h * 0.15, 55, 38);
-    ctx.fillStyle = 'rgba(251,191,36,0.1)'; ctx.fillRect(w * 0.7, h * 0.15, 55, h * 0.47);
-    // Blanket/cardboard pile
-    ctx.fillStyle = '#44403c'; ctx.fillRect(w * 0.15, h * 0.67, w * 0.6, 22);
-    ctx.fillStyle = '#78716c'; ctx.fillRect(w * 0.2, h * 0.65, w * 0.5, 14);
-    // 3 sleeping dogs
-    [[0.25],[0.45],[0.65]].forEach(([dx], i) => {
-      const dy = h * 0.7; const breathe = Math.sin(t * 0.025 + i * 1.5) * 3;
-      ctx.fillStyle = ['#92400e','#78350f','#d97706'][i];
-      // Body
-      ctx.beginPath(); ctx.ellipse(dx * w, dy + breathe, 35, 16, 0, 0, Math.PI * 2); ctx.fill();
-      // Head
-      ctx.beginPath(); ctx.arc(dx * w + (i % 2 ? 30 : -30), dy - 5 + breathe, 14, 0, Math.PI * 2);
-      ctx.fillStyle = ['#92400e','#78350f','#d97706'][i]; ctx.fill();
-      // Ear
-      ctx.beginPath(); ctx.arc(dx * w + (i % 2 ? 38 : -38), dy - 12 + breathe, 7, 0, Math.PI * 2);
-      ctx.fillStyle = ['#7c2d12','#6b2110','#b45309'][i]; ctx.fill();
-      // Eye blink
-      if (i === 1 && Math.sin(t * 0.04) > 0.95) {
-        ctx.beginPath(); ctx.arc(dx * w + 35, dy - 5 + breathe, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#fbbf24'; ctx.fill();
+    ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, w, h);
+
+    const bgPan = (t * 0.5) % w;
+    
+    // Distant buildings parallax
+    for(let i = -1; i < 4; i++) {
+      const bx = i * (w * 0.4) - bgPan * 0.2;
+      ctx.fillStyle = '#1e293b'; 
+      ctx.fillRect(bx, h * 0.3, w * 0.35, h * 0.7);
+      ctx.fillStyle = 'rgba(251,191,36,0.15)';
+      for(let r=0; r<5; r++) for(let c=0; c<3; c++) {
+        if(Math.sin((i+r+c)*123) > 0.5) ctx.fillRect(bx + 20 + c*40, h * 0.4 + r*50, 20, 25);
       }
-      // Tail
-      ctx.beginPath(); ctx.moveTo(dx * w + (i % 2 ? -33 : 33), dy + breathe);
-      ctx.quadraticCurveTo(dx * w + (i % 2 ? -50 : 50), dy - 14 + breathe + Math.sin(t * 0.04 + i) * 5, dx * w + (i % 2 ? -45 : 45), dy - 8 + breathe);
-      ctx.strokeStyle = ['#92400e','#78350f','#d97706'][i]; ctx.lineWidth = 4; ctx.stroke();
-    });
+    }
+
+    // Midground Brick wall & Fence
+    for(let i=-1; i<5; i++) {
+        const mx = i * 300 - bgPan * 0.5;
+        ctx.fillStyle = '#334155'; ctx.fillRect(mx, h * 0.55, 280, h * 0.45);
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2;
+        for(let r=0; r<6; r++) {
+           ctx.beginPath(); ctx.moveTo(mx, h * 0.55 + r*25); ctx.lineTo(mx+280, h * 0.55 + r*25); ctx.stroke();
+           for(let c=0; c<5; c++) { ctx.beginPath(); ctx.moveTo(mx + c*56 + (r%2)*28, h * 0.55 + r*25); ctx.lineTo(mx + c*56 + (r%2)*28, h * 0.55 + r*25 + 25); ctx.stroke(); }
+        }
+        if (i % 2 === 0) {
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(mx + 140, h * 0.2, 8, h * 0.7);
+            const spot = ctx.createRadialGradient(mx+144, h*0.25, 0, mx+144, h*0.7, 180);
+            spot.addColorStop(0, 'rgba(251,191,36,0.8)'); spot.addColorStop(1, 'transparent');
+            ctx.fillStyle = spot; ctx.beginPath(); ctx.arc(mx+144, h*0.25, 180, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
+    // Pavement
+    ctx.fillStyle = '#020617'; ctx.fillRect(0, h * 0.75, w, h * 0.25);
+    
+    // Dynamic Dog Animation
+    const cycle = (t * 5) % 100;
+    
+    let isSniffing = cycle > 40 && cycle <= 55;
+    let isLooking = cycle > 65 && cycle <= 80;
+    let isWalking = !isSniffing && !isLooking;
+    
+    const dogX = w * 0.45;
+    const dogY = h * 0.82;
+    const bounce = isWalking ? Math.sin(t * 15) * 3 : 0;
+    
+    ctx.save();
+    ctx.translate(dogX, dogY + bounce);
+    
+    ctx.fillStyle = '#1c1917';
+    ctx.beginPath(); ctx.ellipse(0, -20, 35, 18, 0, 0, Math.PI * 2); ctx.fill(); // Body
+    
+    const headPivotX = 30; const headPivotY = -25;
+    let headX = 45; let headY = -35;
+    if (isSniffing) { headX = 48; headY = -5; }
+    else if (isLooking) { headX = 42; headY = -45; }
+    
+    ctx.beginPath(); ctx.moveTo(15, -25); ctx.lineTo(headX, headY); ctx.lineWidth = 14; 
+    ctx.strokeStyle = '#1c1917'; ctx.lineCap = 'round'; ctx.stroke();
+    
+    ctx.beginPath(); ctx.arc(headX, headY, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(headX + (isSniffing ? 10 : 12), headY + (isSniffing ? 8 : 2), 10, 6, isSniffing ? Math.PI/4 : 0, 0, Math.PI * 2); ctx.fill();
+    
+    const earAngle = isLooking ? -Math.PI/4 : (isSniffing ? 0 : -Math.PI/6);
+    ctx.save(); ctx.translate(headX - 6, headY - 8); ctx.rotate(earAngle);
+    ctx.beginPath(); ctx.ellipse(0, -6, 4, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.restore();
+
+    const wag = isSniffing || isLooking ? Math.sin(t * 15) * 15 : Math.sin(t * 5) * 5;
+    ctx.beginPath(); ctx.moveTo(-30, -25); ctx.quadraticCurveTo(-45, -35 + wag, -50, -15 + wag);
+    ctx.lineWidth = 6; ctx.stroke();
+
+    const walkPhase = t * 10;
+    const drawLeg = (baseX: number, phaseOffset: number, isBack: boolean) => {
+       const swing = isWalking ? Math.sin(walkPhase + phaseOffset) * 15 : (isBack? 5 : -5);
+       const lift = isWalking && swing > 0 ? -10 : 0;
+       ctx.strokeStyle = isBack ? '#0c0a09' : '#1c1917';
+       ctx.lineWidth = 7;
+       ctx.beginPath(); ctx.moveTo(baseX, -10); 
+       ctx.lineTo(baseX + swing * 0.5, lift); 
+       ctx.lineTo(baseX + swing, lift + 15); ctx.stroke();
+    };
+    
+    drawLeg(-18, Math.PI, true);
+    drawLeg(15, 0, true);
+    drawLeg(-18, 0, false);
+    drawLeg(15, Math.PI, false);
+    
+    ctx.restore();
+
+    // Foreground dust particles
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    for(let i=0; i<30; i++) {
+        const dustX = (Math.sin(i * 123) * w - bgPan * 1.5 + w * 2) % w;
+        const dustY = h * 0.7 + Math.cos(i * 321) * h * 0.3;
+        ctx.beginPath(); ctx.arc(dustX, dustY, 2.5, 0, Math.PI*2); ctx.fill();
+    }
   });
   return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />;
 };
@@ -399,61 +459,79 @@ export const LonelyWalk = () => {
 
 // ─── 68. CITY TOP VIEW ────────────────────────────────────────────────────────
 export const CityTopView = () => {
-  interface TVCar { x: number; y: number; vx: number; vy: number; c: string; }
-  const cars = useRef<TVCar[]>([]);
   const ref = useCanvas((ctx, w, h, t) => {
     ctx.clearRect(0, 0, w, h);
-    // Bird's eye of city grid
-    ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, w, h);
-    // City blocks / buildings (top view)
-    const blockSize = 95;
-    for (let bx = 0; bx < w; bx += blockSize + 28) {
-      for (let by = 0; by < h; by += blockSize + 28) {
-        const bw = blockSize - 5, bh = blockSize - 5;
-        const shade = Math.floor(Math.random() * 30 + 25);
-        ctx.fillStyle = `rgb(${shade},${shade + 5},${shade + 15})`; ctx.fillRect(bx + 5, by + 5, bw, bh);
-        // Building top detail
-        ctx.fillStyle = `rgba(${shade + 15},${shade + 20},${shade + 40},0.8)`;
-        ctx.fillRect(bx + 18, by + 18, bw - 36, bh - 36);
-        // Rooftop water tower or AC unit
-        if ((bx + by) % 200 === 0) { ctx.fillStyle = '#374151'; ctx.fillRect(bx + bw * 0.4, by + bh * 0.35, 15, 20); }
-      }
-    }
-    // Roads (horizontal + vertical)
-    for (let rx = 0; rx < w; rx += blockSize + 28) { ctx.fillStyle = '#1f2937'; ctx.fillRect(rx + blockSize, 0, 28, h); }
-    for (let ry = 0; ry < h; ry += blockSize + 28) { ctx.fillStyle = '#1f2937'; ctx.fillRect(0, ry + blockSize, w, 28); }
-    // Road center lines
-    for (let rx = 0; rx < w; rx += blockSize + 28) {
-      for (let ly = (t * 2) % 40 - 40; ly < h; ly += 40) { ctx.fillStyle = '#fbbf24'; ctx.fillRect(rx + blockSize + 12, ly, 4, 22); }
-    }
-    for (let ry = 0; ry < h; ry += blockSize + 28) {
-      for (let lx = (t * 2) % 40 - 40; lx < w; lx += 40) { ctx.fillStyle = '#fbbf24'; ctx.fillRect(lx, ry + blockSize + 12, 22, 4); }
-    }
-    // Car traffic (top-down view)
-    if (cars.current.length < 40 && Math.random() < 0.08) {
-      const isH = Math.random() > 0.5;
-      const roadOffset = Math.floor(Math.random() * 5) * (blockSize + 28) + blockSize + 4;
-      cars.current.push(isH ?
-        { x: -20, y: roadOffset + Math.random() * 10, vx: Math.random() * 2 + 1.2, vy: 0, c: `hsl(${Math.random() * 360},60%,50%)` } :
-        { x: roadOffset + Math.random() * 10, y: -20, vx: 0, vy: Math.random() * 2 + 1.2, c: `hsl(${Math.random() * 360},60%,50%)` });
-    }
-    cars.current = cars.current.filter(c => c.x < w + 30 && c.y < h + 30);
-    cars.current.forEach(c => {
-      c.x += c.vx; c.y += c.vy;
-      ctx.fillStyle = c.c;
-      if (c.vx !== 0) ctx.fillRect(c.x - 10, c.y - 5, 20, 10);
-      else ctx.fillRect(c.x - 5, c.y - 12, 10, 22);
-      // Headlights
-      ctx.fillStyle = 'rgba(255,250,200,0.8)';
-      if (c.vx > 0) ctx.beginPath(), ctx.arc(c.x + 10, c.y, 3, 0, Math.PI * 2), ctx.fill();
-      if (c.vy > 0) ctx.beginPath(), ctx.arc(c.x, c.y + 12, 3, 0, Math.PI * 2), ctx.fill();
-    });
-    // Shadows of tall buildings
-    ctx.globalAlpha = 0.15;
-    for (let bx = 0; bx < w; bx += blockSize + 28) for (let by = 0; by < h; by += blockSize + 28) {
-      ctx.fillStyle = '#000'; ctx.fillRect(bx + 12, by + 12, blockSize - 5, blockSize - 5);
-    }
+    
+    // Deep relaxing sunset floor
+    const floorG = ctx.createLinearGradient(0, 0, w, h);
+    floorG.addColorStop(0, '#1e1b4b'); floorG.addColorStop(1, '#312e81');
+    ctx.fillStyle = floorG; ctx.fillRect(0, 0, w, h);
+    
+    ctx.globalAlpha = 0.1;
+    ctx.strokeStyle = '#6366f1'; ctx.lineWidth = 2;
+    for(let x=0; x<w; x+=100) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for(let y=0; y<h; y+=100) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
     ctx.globalAlpha = 1;
+
+    // Traffic pulses deep down
+    const roads = [w*0.3, w*0.7];
+    roads.forEach(rx => {
+       for(let i=0; i<4; i++) {
+          const cy = ((t * 15 + i*250) % (h+200)) - 100;
+          const rg = ctx.createRadialGradient(rx, cy, 0, rx, cy, 60);
+          rg.addColorStop(0, 'rgba(244,63,94,0.4)'); rg.addColorStop(1, 'transparent');
+          ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(rx,cy,60,0,Math.PI*2); ctx.fill();
+       }
+    });
+
+    const cx = w/2; const cy = h/2;
+
+    // Central Parallax Skyscraper
+    const tiers = 7;
+    for(let i=0; i<tiers; i++) {
+        const tierSize = Math.max(80, (Math.min(w,h) * 0.6) - i * 65);
+        const swayX = Math.sin(t * 0.4) * (i * 12);
+        const swayY = Math.cos(t * 0.3) * (i * 12);
+        const tx = cx + swayX;
+        const ty = cy + swayY;
+        
+        ctx.fillStyle = `rgba(0,0,0,0.15)`;
+        ctx.fillRect(tx - tierSize/2 + 30, ty - tierSize/2 + 30, tierSize, tierSize);
+
+        const hue = 220; const sat = 30 + i*5; const lit = 20 + i*8;
+        ctx.fillStyle = `hsl(${hue},${sat}%,${lit}%)`;
+        ctx.fillRect(tx - tierSize/2, ty - tierSize/2, tierSize, tierSize);
+        
+        ctx.strokeStyle = `hsl(${hue},${sat}%,${lit + 15}%)`;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(tx - tierSize/2, ty - tierSize/2, tierSize, tierSize);
+        
+        if (i < tiers - 1) {
+             ctx.fillStyle = `hsl(${hue},${sat}%,${lit - 8}%)`;
+             ctx.fillRect(tx - tierSize/2 + 15, ty - tierSize/2 + 15, 30, 30);
+             ctx.fillRect(tx + tierSize/2 - 45, ty + tierSize/2 - 45, 30, 30);
+        } else {
+             ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(tx, ty, tierSize*0.35, 0, Math.PI*2); ctx.fill();
+             ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 3; ctx.stroke();
+             ctx.fillStyle = '#fbbf24'; 
+             ctx.font = `bold ${tierSize*0.3}px sans-serif`; 
+             ctx.textAlign='center'; ctx.textBaseline='middle'; 
+             ctx.fillText('H', tx, ty);
+        }
+    }
+
+    // Drifting clouds above
+    for(let c=0; c<4; c++) {
+        const cloudX = ((t * 12 + c * 400) % (w + 600)) - 300;
+        const cloudY = h*0.3 + Math.sin(c * 123) * h*0.4;
+        
+        ctx.globalAlpha = 0.3;
+        const cloudG = ctx.createRadialGradient(cloudX, cloudY, 10, cloudX, cloudY, 150);
+        cloudG.addColorStop(0, '#f1f5f9'); cloudG.addColorStop(1, 'transparent');
+        ctx.fillStyle = cloudG;
+        ctx.beginPath(); ctx.ellipse(cloudX, cloudY, 200, 80, 0, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1;
+    }
   });
   return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }} />;
 };

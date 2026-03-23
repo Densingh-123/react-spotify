@@ -107,8 +107,9 @@ textarea {
 
 /* Desktop sidebar layout */
 .sidebar {
-  width: 240px;
+  width: var(--sidebar-width, 240px);
   flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .main-content {
@@ -600,8 +601,9 @@ textarea {
 @media (min-width: 768px) {
   .mini-player {
     bottom: 0;
-    left: 240px;
+    left: var(--sidebar-width, 240px);
     margin: 0 8px 8px;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -773,11 +775,12 @@ textarea {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, padding 0.3s;
   color: var(--color-text-secondary);
   border-radius: 0;
   margin: 1px 8px;
   border-radius: 10px;
+  overflow: hidden;
 }
 
 .sidebar-nav-item:hover {
@@ -788,6 +791,14 @@ textarea {
 .sidebar-nav-item.active {
   background: var(--color-primary)18;
   color: var(--color-primary);
+}
+
+.sidebar.minimized .sidebar-logo {
+  padding: 0 12px 24px;
+}
+.sidebar.minimized .sidebar-nav-item {
+  justify-content: center;
+  padding: 13px 0;
 }
 
 /* ===== TOP HEADER (Mobile) ===== */

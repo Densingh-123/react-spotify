@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -22,6 +22,7 @@ import SupportChatPage from './pages/SupportChatPage';
 import PlaylistDetailPage from './pages/PlaylistDetailPage';
 import LikedSongsPage from './pages/LikedSongsPage';
 import RecentlyPlayedPage from './pages/RecentlyPlayedPage';
+import RingtoneHistoryPage from './pages/RingtoneHistoryPage';
 import DownloadsPage from './pages/DownloadsPage';
 import ArtistPage from './pages/ArtistPage';
 import RingtonesPage from './pages/RingtonesPage';
@@ -46,7 +47,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppLayout() {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
   if (isLoading) return <CinematicLoader />;
+
+  const isRingtoneStudio = location.pathname.includes('/ringtones/edit');
 
   return (
     <div className="app-root">
@@ -72,6 +76,7 @@ function AppLayout() {
             <Route path="/support" element={<SupportChatPage />} />
             <Route path="/liked" element={<LikedSongsPage />} />
             <Route path="/recently-played" element={<RecentlyPlayedPage />} />
+            <Route path="/ringtones-history" element={<RingtoneHistoryPage />} />
             <Route path="/downloads" element={<DownloadsPage />} />
             <Route path="/artist/:name" element={<ArtistPage />} />
             <Route path="/ringtones" element={<RingtonesPage />} />
@@ -88,7 +93,7 @@ function AppLayout() {
           </Routes>
         </div>
       </div>
-      {user && <MiniPlayer />}
+      {user && !isRingtoneStudio && <MiniPlayer />}
       {user && <BottomNav />}
     </div>
   );

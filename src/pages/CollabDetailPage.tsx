@@ -4,7 +4,7 @@ import { IoChevronBack, IoShareSocial, IoPlay, IoAddCircleOutline, IoMusicalNote
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/services/firebaseConfig';
-import { doc, getDoc, updateDoc, arrayUnion, collection, query, onSnapshot, addDoc, orderBy, limit, getDocs, where } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, collection, query, onSnapshot, addDoc, orderBy, limit, getDocs, where, increment } from 'firebase/firestore';
 import { SongItem, getRecommendedSongs, searchSongs } from '@/services/api';
 import { usePlayer } from '@/context/PlayerContext';
 import SkeletonLoader from '@/components/ui/SkeletonLoader';
@@ -128,6 +128,7 @@ export default function CollabDetailPage() {
         addedBy: user?.displayName || 'Anonymous',
         addedAt: new Date()
       });
+      await updateDoc(doc(db, 'collab_playlists', id), { songCount: increment(1) });
       // Optionally remove from recommendations UI instantly
       setRecommended(prev => prev.filter(s => s.id !== song.id));
     } catch (e) {

@@ -11,6 +11,7 @@ import EqualizerModal from '@/components/EqualizerModal';
 
 export default function PlayerPage() {
   const { colors } = useTheme();
+  const playIconColor = colors.primary === '#ffffff' ? '#000' : '#fff';
   const navigate = useNavigate();
   const { currentTrack, queue, currentIndex, isPlaying, position, duration, repeatMode, setRepeat, playTrack, togglePlay, skipNext, skipPrev, isShuffled, toggleShuffle, setSleepTimer, sleepTimerEnd, seekTo, jumpToQueueIndex } = usePlayer();
   const { isLiked, toggleLike } = useLikes();
@@ -137,15 +138,43 @@ export default function PlayerPage() {
       </div>
 
       {/* Album Art */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 30, marginBottom: 32, position: 'relative' }}>
+        <style>
+          {`
+            @keyframes wave-bar {
+              0%, 100% { height: 6px; }
+              50% { height: var(--active-h); }
+            }
+          `}
+        </style>
+
+        {isPlaying && Array.from({ length: 48 }).map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            top: '50%', left: '50%',
+            width: 5,
+            height: 6,
+            backgroundColor: colors.primary,
+            borderRadius: 3,
+            transformOrigin: 'top center',
+            transform: `translate(-50%, 0) rotate(${i * 7.5}deg) translateY(calc(min(140px, 30vw) + 22px))`,
+            animation: `wave-bar 1.2s ease-in-out infinite ${Math.random()}s`,
+            ['--active-h' as any]: `${15 + (i % 4 === 0 ? 25 : Math.random() * 15)}px`,
+          }} />
+        ))}
+
         <div style={{
           width: 'min(280px, 60vw)', height: 'min(280px, 60vw)', borderRadius: '50%',
-          overflow: 'hidden', border: `3px solid ${colors.border}`,
-          boxShadow: `0 12px 40px ${colors.primary}44`,
-          animation: isPlaying ? 'album-spin 12s linear infinite' : 'album-spin 12s linear infinite paused',
+          padding: 10,
+          boxSizing: 'content-box',
+          overflow: 'visible', border: `3px solid ${colors.primary}55`,
+          boxShadow: isPlaying ? `0 0 30px ${colors.primary}44` : 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.3s ease',
+          backgroundColor: colors.surfaceHighlight,
         }}>
           <img src={currentTrack.artworkUrl || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400'} alt={currentTrack.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
+             style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%', pointerEvents: 'none' }} />
         </div>
       </div>
 
@@ -205,7 +234,7 @@ export default function PlayerPage() {
           onMouseDown={e => (e.currentTarget.style.transform = 'scale(0.92)')}
           onMouseUp={e => (e.currentTarget.style.transform = 'scale(1)')}
         >
-          {isPlaying ? <IoPause size={44} color="#fff" /> : <IoPlay size={44} color="#fff" style={{ marginLeft: 4 }} />}
+          {isPlaying ? <IoPause size={44} color={playIconColor} /> : <IoPlay size={44} color={playIconColor} style={{ marginLeft: 4 }} />}
         </button>
         <button className="icon-btn" style={{ color: colors.text }} onClick={() => skipNext()}><IoPlaySkipForward size={36} /></button>
         <button className="icon-btn" style={{ color: repeatMode !== 'off' ? colors.primary : colors.textSecondary }} onClick={cyclRepeat}>

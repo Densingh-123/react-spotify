@@ -2,8 +2,10 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { IoPlay, IoPause, IoPlaySkipForward, IoClose } from 'react-icons/io5';
 import { usePlayer } from '@/context/PlayerContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function MiniPlayer() {
+  const { colors } = useTheme();
   const { currentTrack, isPlaying, position, duration, togglePlay, skipNext, reset } = usePlayer();
   const navigate = useNavigate();
   const location = useLocation();
@@ -11,6 +13,7 @@ export default function MiniPlayer() {
   if (!currentTrack || location.pathname === '/player') return null;
 
   const progress = duration > 0 ? (position / duration) * 100 : 0;
+  const playIconColor = colors.primary === '#ffffff' ? '#000' : '#fff';
 
   return (
     <div className="mini-player">
@@ -30,8 +33,8 @@ export default function MiniPlayer() {
           </div>
         </div>
         <div className="mini-player-controls">
-          <button className="mini-player-play" onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
-            {isPlaying ? <IoPause size={18} color="#fff" /> : <IoPlay size={18} color="#fff" style={{ marginLeft: 2 }} />}
+          <button className="mini-player-play" style={{ background: colors.primary }} onClick={(e) => { e.stopPropagation(); togglePlay(); }}>
+            {isPlaying ? <IoPause size={18} color={playIconColor} /> : <IoPlay size={18} color={playIconColor} style={{ marginLeft: 2 }} />}
           </button>
           <button className="icon-btn" onClick={(e) => { e.stopPropagation(); skipNext(); }} style={{ color: 'var(--color-text-secondary)', width: 32, height: 32 }}>
             <IoPlaySkipForward size={20} />
