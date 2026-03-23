@@ -85,7 +85,7 @@ export default function CollabDetailPage() {
         setRecommended(unique.slice(0, 20));
       } else {
          // Fallback default
-         const dummySong = { id: 'cWigVlzj', title: 'Illuminati', artist: 'Sushin Shyam', album: 'Aavesham', duration: '180', artworkUrl: '', streamUrl: 'https://jiosaavn-api-murex-two.vercel.app/api/songs/cWigVlzj' } as SongItem;
+         const dummySong = { id: 'cWigVlzj', title: 'Illuminati', artist: 'Sushin Shyam', album: 'Aavesham', duration: 180, artworkUrl: '', streamUrl: 'https://jiosaavn-api-murex-two.vercel.app/api/songs/cWigVlzj' } as SongItem;
         getRecommendedSongs(dummySong).then(recs => setRecommended(recs.slice(0, 20)));
       }
     });
